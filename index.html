@@ -1,910 +1,689 @@
 <!DOCTYPE html>
 <html lang="fr">
-
 <head>
-
-<meta charset="UTF-8">
-
-<meta
-  name="viewport"
-  content="width=device-width, initial-scale=1.0"
->
-
-<title>SCAN PANNEAUX</title>
-
-
-<style>
-
-* {
-  box-sizing: border-box;
-}
-
-
-body {
-
-  margin: 0;
-
-  font-family:
-    Arial,
-    Helvetica,
-    sans-serif;
-
-  background: #f1f3f6;
-
-  color: #111;
-}
-
-
-.container {
-
-  width: 100%;
-
-  max-width: 900px;
-
-  margin: auto;
-
-  padding: 20px;
-}
-
-
-h1 {
-
-  text-align: center;
-
-  font-size: 36px;
-
-  margin: 20px 0 30px;
-}
-
-
-.card {
-
-  background: white;
-
-  border-radius: 18px;
-
-  padding: 22px;
-
-  margin-bottom: 20px;
-
-  box-shadow:
-    0 5px 18px rgba(0,0,0,.10);
-}
-
-
-label {
-
-  display: block;
-
-  font-size: 22px;
-
-  font-weight: bold;
-
-  margin-bottom: 10px;
-}
-
-
-select,
-input {
-
-  width: 100%;
-
-  padding: 18px;
-
-  font-size: 22px;
-
-  border: 1px solid #bbb;
-
-  border-radius: 12px;
-
-  outline: none;
-}
-
-
-select:focus,
-input:focus {
-
-  border-color: #2864e8;
-}
-
-
-button {
-
-  width: 100%;
-
-  border: 0;
-
-  border-radius: 12px;
-
-  padding: 20px;
-
-  font-size: 24px;
-
-  font-weight: bold;
-
-  cursor: pointer;
-
-  margin-top: 15px;
-}
-
-
-.camera-btn {
-
-  background: #16a34a;
-
-  color: white;
-}
-
-
-.save-btn {
-
-  background: #2864e8;
-
-  color: white;
-}
-
-
-.repere-box {
-
-  text-align: center;
-
-  padding: 20px;
-}
-
-
-.repere-title {
-
-  font-size: 20px;
-
-  color: #555;
-}
-
-
-.repere-value {
-
-  font-size: 34px;
-
-  font-weight: bold;
-
-  margin: 5px;
-}
-
-
-.remaining {
-
-  font-size: 22px;
-
-  color: #555;
-}
-
-
-.message {
-
-  display: none;
-
-  padding: 18px;
-
-  border-radius: 12px;
-
-  font-size: 20px;
-
-  font-weight: bold;
-
-  text-align: center;
-
-  margin-top: 15px;
-}
-
-
-.success {
-
-  display: block;
-
-  background: #dcfce7;
-
-  color: #166534;
-}
-
-
-.error {
-
-  display: block;
-
-  background: #fee2e2;
-
-  color: #991b1b;
-}
-
-
-.warning {
-
-  display: block;
-
-  background: #fef3c7;
-
-  color: #92400e;
-}
-
-
-.camera-area {
-
-  display: none;
-
-  margin-top: 15px;
-
-  text-align: center;
-}
-
-
-video {
-
-  width: 100%;
-
-  max-height: 400px;
-
-  border-radius: 15px;
-
-  background: black;
-}
-
-
-.small {
-
-  color: #666;
-
-  text-align: center;
-
-  margin-top: 10px;
-}
-
-
-@media (max-width: 600px) {
-
-  h1 {
-    font-size: 28px;
-  }
-
-  label {
-    font-size: 19px;
-  }
-
-  select,
-  input {
-    font-size: 19px;
-  }
-
-  button {
-    font-size: 20px;
-  }
-
-}
-
-</style>
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>SCAN PANNEAUX</title>
+
+  <!-- Scanner QR / BARCODE -->
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f1f3f6;
+      color: #111;
+    }
+
+    .container {
+      width: 95%;
+      max-width: 900px;
+      margin: auto;
+      padding: 20px 0 50px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 20px;
+      padding: 22px;
+      margin-bottom: 20px;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.10);
+    }
+
+    h1 {
+      text-align: center;
+      margin: 5px 0 20px;
+      font-size: 30px;
+    }
+
+    .label {
+      font-weight: bold;
+      font-size: 20px;
+      margin-bottom: 10px;
+      display: block;
+    }
+
+    input {
+      width: 100%;
+      padding: 18px;
+      font-size: 20px;
+      border: 1px solid #bbb;
+      border-radius: 12px;
+      outline: none;
+    }
+
+    input:focus {
+      border-color: #2563eb;
+    }
+
+    button {
+      width: 100%;
+      border: 0;
+      border-radius: 12px;
+      padding: 18px;
+      font-size: 20px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 12px;
+    }
+
+    .btn-camera {
+      background: #16a34a;
+      color: white;
+    }
+
+    .btn-save {
+      background: #2563eb;
+      color: white;
+    }
+
+    .btn-stop {
+      background: #dc2626;
+      color: white;
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    #reader {
+      width: 100%;
+      max-width: 600px;
+      margin: 20px auto;
+      overflow: hidden;
+      border-radius: 15px;
+    }
+
+    #reader video {
+      border-radius: 15px;
+    }
+
+    .status {
+      padding: 15px;
+      border-radius: 12px;
+      margin-top: 15px;
+      text-align: center;
+      font-size: 18px;
+      font-weight: bold;
+      display: none;
+    }
+
+    .success {
+      display: block;
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    .error {
+      display: block;
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    .info {
+      display: block;
+      background: #dbeafe;
+      color: #1e40af;
+    }
+
+    .position {
+      text-align: center;
+      padding: 20px;
+      background: #f8fafc;
+      border-radius: 15px;
+      margin-bottom: 20px;
+    }
+
+    .position-title {
+      color: #555;
+      font-size: 18px;
+    }
+
+    .position-value {
+      font-size: 35px;
+      font-weight: bold;
+      margin-top: 5px;
+    }
+
+    .small {
+      text-align: center;
+      color: #666;
+      font-size: 14px;
+      margin-top: 10px;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+  </style>
 </head>
-
 
 <body>
 
-
 <div class="container">
 
+  <div class="card">
+    <h1>📋 SCAN PANNEAUX</h1>
 
-<h1>
-📋 SCAN PANNEAUX
-</h1>
-
-
-<!-- REPERE -->
-
-<div class="card">
-
-<label>
-👷 REPERE / INSPECTEUR
-</label>
+    <div class="position">
+      <div class="position-title">REPÈRE ACTUEL</div>
+      <div id="position" class="position-value">Aucun</div>
+    </div>
+  </div>
 
 
-<select id="repere">
+  <!-- CAMERA -->
+  <div class="card">
 
-<option value="">
--- Sélectionner le REPERE --
-</option>
+    <button
+      id="openCameraBtn"
+      class="btn-camera"
+      onclick="startScanner()">
+      📷 OUVRIR LA CAMÉRA
+    </button>
 
-</select>
+    <div id="scannerArea" class="hidden">
 
+      <div id="reader"></div>
 
-<p class="small">
-Le REPERE détermine la chaîne à inspecter.
-</p>
+      <button
+        id="stopCameraBtn"
+        class="btn-stop"
+        onclick="stopScanner()">
+        ⛔ ARRÊTER LA CAMÉRA
+      </button>
 
-</div>
+      <div class="small">
+        Place le QR code ou le code-barres dans le cadre.
+      </div>
 
+    </div>
 
-
-<!-- REPERE ACTUEL -->
-
-<div class="card repere-box">
-
-<div class="repere-title">
-REPERE ACTUEL
-</div>
-
-
-<div
-  id="currentRepere"
-  class="repere-value"
->
-Aucun
-</div>
+  </div>
 
 
-<div
-  id="remaining"
-  class="remaining"
->
--
-</div>
+  <!-- SN -->
+  <div class="card">
 
-</div>
+    <label class="label">SN</label>
 
+    <input
+      id="sn"
+      type="text"
+      placeholder="Scanner ou saisir le SN..."
+      autocomplete="off"
+      autocapitalize="characters"
+      spellcheck="false"
+    >
 
+    <button
+      id="saveBtn"
+      class="btn-save"
+      onclick="saveSN()">
+      ✅ ENREGISTRER SN
+    </button>
 
-<!-- CAMERA -->
+    <div id="status" class="status"></div>
 
-<div class="card">
-
-<button
-  class="camera-btn"
-  onclick="openCamera()"
->
-📷 OUVRIR LA CAMÉRA
-</button>
-
-
-<div
-  id="cameraArea"
-  class="camera-area"
->
-
-<video
-  id="video"
-  autoplay
-  playsinline
-></video>
-
-<button
-  onclick="closeCamera()"
->
-❌ FERMER CAMÉRA
-</button>
+  </div>
 
 </div>
-
-</div>
-
-
-
-<!-- SN -->
-
-<div class="card">
-
-<label>
-SN
-</label>
-
-
-<input
-  id="sn"
-  type="text"
-  placeholder="Scanner ou saisir le SN..."
-  autocomplete="off"
-/>
-
-
-<button
-  class="save-btn"
-  onclick="saveSN()"
->
-✅ ENREGISTRER SN
-</button>
-
-
-<div
-  id="message"
-  class="message"
-></div>
-
-</div>
-
-
-</div>
-
 
 
 <script>
 
+  /************************************************
+   * CONFIGURATION
+   ************************************************/
 
-/****************************************************
- * GOOGLE APPS SCRIPT API
- ****************************************************/
-
-const API_URL =
-'https://script.google.com/macros/s/AKfycbwhfATP060XPj9KMcgOvTnnKnP96RJWV_VkznC0733WFvWcQ_oX7XOgBIQct4osb2o1/exec';
-
+  const API_URL =
+    "https://script.google.com/macros/s/AKfycbwhfATP060XPj9KMcgOvTnnKnP96RJWV_VkznC0733WFvWcQ_oX7XOgBIQct4osb2o1/exec";
 
 
-/****************************************************
- * JSONP
- ****************************************************/
-
-function callAPI(params) {
-
-  return new Promise(function(resolve, reject) {
-
-    const callbackName =
-      'jsonp_' +
-      Date.now() +
-      '_' +
-      Math.floor(Math.random() * 100000);
+  let scanner = null;
+  let scannerRunning = false;
+  let lastScanned = "";
 
 
-    const script =
-      document.createElement('script');
+  /************************************************
+   * AFFICHER MESSAGE
+   ************************************************/
+
+  function showStatus(message, type) {
+
+    const box = document.getElementById("status");
+
+    box.textContent = message;
+
+    box.className = "status " + type;
+  }
 
 
-    const query =
-      new URLSearchParams(params);
+  /************************************************
+   * OUVRIR SCANNER
+   ************************************************/
+
+  async function startScanner() {
+
+    if (scannerRunning) {
+      return;
+    }
+
+    document
+      .getElementById("scannerArea")
+      .classList.remove("hidden");
+
+    showStatus(
+      "📷 Initialisation de la caméra...",
+      "info"
+    );
+
+    try {
+
+      scanner = new Html5Qrcode("reader");
+
+      const config = {
+
+        fps: 10,
+
+        qrbox: function(viewfinderWidth, viewfinderHeight) {
+
+          const minEdge = Math.min(
+            viewfinderWidth,
+            viewfinderHeight
+          );
+
+          const size = Math.floor(minEdge * 0.70);
+
+          return {
+            width: size,
+            height: size
+          };
+        },
+
+        aspectRatio: 1.0,
+
+        formatsToSupport: [
+
+          Html5QrcodeSupportedFormats.QR_CODE,
+
+          Html5QrcodeSupportedFormats.CODE_128,
+
+          Html5QrcodeSupportedFormats.CODE_39,
+
+          Html5QrcodeSupportedFormats.CODE_93,
+
+          Html5QrcodeSupportedFormats.EAN_13,
+
+          Html5QrcodeSupportedFormats.EAN_8,
+
+          Html5QrcodeSupportedFormats.UPC_A,
+
+          Html5QrcodeSupportedFormats.UPC_E,
+
+          Html5QrcodeSupportedFormats.ITF,
+
+          Html5QrcodeSupportedFormats.CODABAR,
+
+          Html5QrcodeSupportedFormats.DATA_MATRIX,
+
+          Html5QrcodeSupportedFormats.AZTEC,
+
+          Html5QrcodeSupportedFormats.PDF_417
+
+        ]
+
+      };
 
 
-    query.set(
-      'callback',
-      callbackName
+      /*
+       * IMPORTANT :
+       * facingMode = environment
+       * = caméra arrière du téléphone
+       */
+
+      await scanner.start(
+
+        {
+          facingMode: "environment"
+        },
+
+        config,
+
+        function(decodedText, decodedResult) {
+
+          handleScan(decodedText);
+
+        },
+
+        function(errorMessage) {
+
+          // Les erreurs de lecture image
+          // sont normales pendant le scan.
+          // On ne les affiche pas.
+
+        }
+
+      );
+
+
+      scannerRunning = true;
+
+      document
+        .getElementById("openCameraBtn")
+        .classList.add("hidden");
+
+      showStatus(
+        "📷 Caméra active — place le code dans le cadre.",
+        "info"
+      );
+
+    }
+
+    catch (error) {
+
+      console.error(error);
+
+      showStatus(
+        "❌ Impossible d'ouvrir la caméra. Autorise l'accès à la caméra dans le téléphone.",
+        "error"
+      );
+
+      document
+        .getElementById("scannerArea")
+        .classList.add("hidden");
+
+    }
+
+  }
+
+
+  /************************************************
+   * CODE SCANNÉ
+   ************************************************/
+
+  function handleScan(decodedText) {
+
+    if (!decodedText) {
+      return;
+    }
+
+    decodedText = String(decodedText).trim();
+
+    /*
+     * Empêcher plusieurs lectures
+     * du même code immédiatement.
+     */
+
+    if (decodedText === lastScanned) {
+      return;
+    }
+
+    lastScanned = decodedText;
+
+
+    /*
+     * Mettre automatiquement le résultat
+     * dans le champ SN
+     */
+
+    document.getElementById("sn").value = decodedText;
+
+
+    showStatus(
+      "✅ Code détecté : " + decodedText,
+      "success"
     );
 
 
-    script.src =
-      API_URL +
-      '?' +
-      query.toString();
+    /*
+     * Arrêter la caméra après lecture
+     */
+
+    stopScanner();
 
 
-    window[callbackName] =
-      function(data) {
-
-        delete window[callbackName];
-
-        script.remove();
-
-        resolve(data);
-      };
-
-
-    script.onerror =
-      function() {
-
-        delete window[callbackName];
-
-        script.remove();
-
-        reject(
-          new Error(
-            'Impossible de contacter Google Sheet.'
-          )
-        );
-      };
-
-
-    document.body.appendChild(script);
-
+    /*
+     * Enregistrer automatiquement
+     */
 
     setTimeout(function() {
 
-      if (window[callbackName]) {
+      saveSN();
 
-        delete window[callbackName];
+    }, 500);
 
-        script.remove();
+  }
 
-        reject(
-          new Error(
-            'Timeout Google Sheet.'
-          )
+
+  /************************************************
+   * ARRÊTER SCANNER
+   ************************************************/
+
+  async function stopScanner() {
+
+    if (!scanner) {
+      return;
+    }
+
+    try {
+
+      if (scannerRunning) {
+
+        await scanner.stop();
+
+      }
+
+    }
+    catch (error) {
+
+      console.error(error);
+
+    }
+
+
+    try {
+
+      await scanner.clear();
+
+    }
+    catch (error) {
+
+      console.error(error);
+
+    }
+
+
+    scanner = null;
+
+    scannerRunning = false;
+
+
+    document
+      .getElementById("reader")
+      .innerHTML = "";
+
+
+    document
+      .getElementById("scannerArea")
+      .classList.add("hidden");
+
+
+    document
+      .getElementById("openCameraBtn")
+      .classList.remove("hidden");
+
+  }
+
+
+  /************************************************
+   * ENREGISTRER SN
+   ************************************************/
+
+  async function saveSN() {
+
+    const input = document.getElementById("sn");
+
+    const sn = input.value.trim();
+
+
+    if (!sn) {
+
+      showStatus(
+        "⚠️ Scanne ou saisis un SN.",
+        "error"
+      );
+
+      input.focus();
+
+      return;
+
+    }
+
+
+    const saveBtn = document.getElementById("saveBtn");
+
+    saveBtn.disabled = true;
+
+    saveBtn.textContent = "⏳ ENREGISTREMENT...";
+
+
+    showStatus(
+      "⏳ Enregistrement dans Google Sheet...",
+      "info"
+    );
+
+
+    try {
+
+      /*
+       * Appel Google Apps Script
+       */
+
+      const url =
+        API_URL +
+        "?action=saveSN&sn=" +
+        encodeURIComponent(sn);
+
+
+      const response =
+        await fetch(url, {
+          method: "GET",
+          cache: "no-cache"
+        });
+
+
+      if (!response.ok) {
+
+        throw new Error(
+          "HTTP " + response.status
         );
+
       }
 
-    }, 15000);
 
-  });
-
-}
+      const data =
+        await response.json();
 
 
-
-/****************************************************
- * MESSAGE
- ****************************************************/
-
-function showMessage(
-  text,
-  type
-) {
-
-  const box =
-    document.getElementById('message');
+      console.log("API:", data);
 
 
-  box.className =
-    'message ' + type;
+      if (data.ok) {
+
+        /*
+         * Afficher le repère attribué
+         */
+
+        document.getElementById("position").textContent =
+          data.repere || data.position || "OK";
 
 
-  box.textContent = text;
-
-}
-
-
-
-/****************************************************
- * CHARGER LES REPÈRES
- ****************************************************/
-
-async function loadReperes() {
-
-  try {
-
-    const result =
-      await callAPI({
-        action: 'getReperes'
-      });
+        showStatus(
+          "✅ SN enregistré avec succès.",
+          "success"
+        );
 
 
-    if (!result.ok) {
+        input.value = "";
 
-      showMessage(
-        result.message ||
-        'Erreur chargement REPERE',
-        'error'
-      );
-
-      return;
-    }
+        lastScanned = "";
 
 
-    const select =
-      document.getElementById('repere');
-
-
-    select.innerHTML =
-      '<option value="">-- Sélectionner le REPERE --</option>';
-
-
-    result.reperes.forEach(function(repere) {
-
-      const option =
-        document.createElement('option');
-
-
-      option.value = repere;
-
-      option.textContent = repere;
-
-
-      select.appendChild(option);
-
-    });
-
-
-  } catch (error) {
-
-    showMessage(
-      error.message,
-      'error'
-    );
-
-  }
-
-}
-
-
-
-/****************************************************
- * CHANGEMENT REPERE
- ****************************************************/
-
-document
-  .getElementById('repere')
-  .addEventListener(
-    'change',
-    function() {
-
-      const repere =
-        this.value;
-
-
-      document
-        .getElementById('currentRepere')
-        .textContent =
-        repere || 'Aucun';
-
-
-      if (!repere) {
-
-        document
-          .getElementById('remaining')
-          .textContent = '-';
-
-        return;
       }
 
-      document
-        .getElementById('remaining')
-        .textContent =
-        'Prêt pour le scan';
+      else {
+
+        showStatus(
+          "❌ " +
+          (data.message || "Erreur pendant l'enregistrement."),
+          "error"
+        );
+
+      }
 
     }
-  );
+
+    catch (error) {
+
+      console.error(error);
+
+      showStatus(
+        "❌ Impossible de contacter Google Sheet.",
+        "error"
+      );
+
+    }
 
 
+    saveBtn.disabled = false;
 
-/****************************************************
- * ENREGISTRER SN
- ****************************************************/
+    saveBtn.textContent = "✅ ENREGISTRER SN";
 
-async function saveSN() {
-
-  const repere =
-    document
-      .getElementById('repere')
-      .value
-      .trim();
-
-
-  const sn =
-    document
-      .getElementById('sn')
-      .value
-      .trim();
-
-
-  if (!repere) {
-
-    showMessage(
-      'Veuillez sélectionner un REPERE.',
-      'warning'
-    );
-
-    return;
   }
 
 
-  if (!sn) {
+  /************************************************
+   * ENTRÉE CLAVIER
+   ************************************************/
 
-    showMessage(
-      'Veuillez saisir ou scanner le SN.',
-      'warning'
-    );
+  document
+    .getElementById("sn")
+    .addEventListener("keydown", function(event) {
 
-    return;
-  }
-
-
-  showMessage(
-    'Enregistrement...',
-    'warning'
-  );
-
-
-  try {
-
-    const result =
-      await callAPI({
-
-        action: 'save',
-
-        sn: sn,
-
-        repere: repere
-
-      });
-
-
-    if (result.ok) {
-
-
-      showMessage(
-        result.message,
-        'success'
-      );
-
-
-      document
-        .getElementById('remaining')
-        .textContent =
-        'Panneaux restants : ' +
-        result.remaining;
-
-
-      document
-        .getElementById('sn')
-        .value = '';
-
-
-      document
-        .getElementById('sn')
-        .focus();
-
-
-      return;
-    }
-
-
-    if (result.duplicate) {
-
-      showMessage(
-        result.message,
-        'error'
-      );
-
-      return;
-    }
-
-
-    if (result.full) {
-
-      showMessage(
-        result.message,
-        'warning'
-      );
-
-      return;
-    }
-
-
-    showMessage(
-      result.message ||
-      'Erreur enregistrement.',
-      'error'
-    );
-
-
-  } catch (error) {
-
-    showMessage(
-      error.message,
-      'error'
-    );
-
-  }
-
-}
-
-
-
-/****************************************************
- * ENTER = ENREGISTRER
- ****************************************************/
-
-document
-  .getElementById('sn')
-  .addEventListener(
-    'keydown',
-    function(event) {
-
-      if (event.key === 'Enter') {
+      if (event.key === "Enter") {
 
         event.preventDefault();
 
         saveSN();
+
       }
 
+    });
+
+
+  /************************************************
+   * NETTOYAGE QUAND ON QUITTE LA PAGE
+   ************************************************/
+
+  window.addEventListener("beforeunload", function() {
+
+    if (scanner && scannerRunning) {
+
+      scanner.stop();
+
     }
-  );
 
-
-
-/****************************************************
- * CAMERA
- ****************************************************/
-
-let stream = null;
-
-
-async function openCamera() {
-
-  const area =
-    document
-      .getElementById('cameraArea');
-
-
-  const video =
-    document
-      .getElementById('video');
-
-
-  try {
-
-    stream =
-      await navigator
-        .mediaDevices
-        .getUserMedia({
-
-          video: {
-            facingMode: {
-              ideal: 'environment'
-            }
-          },
-
-          audio: false
-
-        });
-
-
-    video.srcObject =
-      stream;
-
-
-    area.style.display =
-      'block';
-
-
-  } catch (error) {
-
-    showMessage(
-      'Impossible d’ouvrir la caméra. Vérifiez les permissions du navigateur.',
-      'error'
-    );
-
-  }
-
-}
-
-
-
-/****************************************************
- * FERMER CAMERA
- ****************************************************/
-
-function closeCamera() {
-
-  const area =
-    document
-      .getElementById('cameraArea');
-
-
-  if (stream) {
-
-    stream
-      .getTracks()
-      .forEach(function(track) {
-
-        track.stop();
-
-      });
-
-    stream = null;
-  }
-
-
-  area.style.display =
-    'none';
-
-}
-
-
-
-/****************************************************
- * START
- ****************************************************/
-
-loadReperes();
-
-document
-  .getElementById('sn')
-  .focus();
-
+  });
 
 </script>
 
-
 </body>
-
 </html>
