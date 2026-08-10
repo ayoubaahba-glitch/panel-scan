@@ -1,118 +1,108 @@
 <!DOCTYPE html>
 <html lang="fr">
-
 <head>
-
 <meta charset="UTF-8">
-
 <meta
   name="viewport"
-  content="width=device-width, initial-scale=1.0"
+  content="width=device-width, initial-scale=1.0, viewport-fit=cover"
 >
 
 <title>SCAN PANNEAUX</title>
 
-<!-- Scanner QR / codes-barres -->
-<script src="https://unpkg.com/html5-qrcode"></script>
+<script src="https://unpkg.com/@zxing/browser@0.1.5/umd/index.min.js"></script>
 
 <style>
-
 * {
   box-sizing: border-box;
 }
 
 body {
   margin: 0;
-  padding: 20px 12px 40px;
   background: #eef1f5;
-  font-family:
-    Arial,
-    Helvetica,
-    sans-serif;
+  font-family: Arial, Helvetica, sans-serif;
   color: #111827;
 }
 
 .container {
   width: 100%;
-  max-width: 650px;
+  max-width: 620px;
   margin: auto;
+  padding: 18px;
 }
 
 h1 {
   text-align: center;
-  font-size: 42px;
-  margin: 15px 0 25px;
-  font-weight: 900;
+  font-size: 38px;
+  margin: 10px 0 25px;
 }
 
 .card {
   background: white;
   border-radius: 25px;
-  padding: 25px;
+  padding: 22px;
   margin-bottom: 18px;
-  box-shadow:
-    0 8px 25px rgba(0,0,0,.08);
+  box-shadow: 0 8px 25px rgba(0,0,0,.08);
 }
 
 label {
   display: block;
-  font-size: 22px;
-  font-weight: 900;
-  margin-bottom: 12px;
+  font-size: 20px;
+  font-weight: bold;
+  margin-bottom: 10px;
 }
 
 input,
 select {
   width: 100%;
-  min-height: 60px;
-  border: 2px solid #d1d5db;
+  height: 58px;
+  border: 2px solid #cfd4da;
   border-radius: 18px;
-  padding: 12px 18px;
+  padding: 0 18px;
   font-size: 20px;
-  outline: none;
+  background: white;
 }
 
 input:focus,
 select:focus {
+  outline: none;
   border-color: #2563eb;
 }
 
 button {
   width: 100%;
-  min-height: 62px;
-  border: 0;
+  min-height: 58px;
+  border: none;
   border-radius: 18px;
   margin-top: 12px;
-  font-size: 21px;
-  font-weight: 900;
+  font-size: 19px;
+  font-weight: bold;
   color: white;
   cursor: pointer;
 }
 
-.btn-camera {
+.btn-green {
   background: #16a34a;
 }
 
-.btn-save {
+.btn-blue {
   background: #2563eb;
 }
 
-.btn-new {
+.btn-dark {
   background: #111827;
 }
 
 button:disabled {
   opacity: .55;
-  cursor: not-allowed;
 }
 
-.message {
-  margin-top: 15px;
-  padding: 15px;
+.status {
+  margin-top: 12px;
+  padding: 14px;
   border-radius: 15px;
   text-align: center;
-  font-size: 18px;
-  font-weight: 900;
+  font-weight: bold;
+  font-size: 16px;
 }
 
 .success {
@@ -130,85 +120,87 @@ button:disabled {
   color: #1e40af;
 }
 
-.current {
+.repere-current {
   margin-top: 15px;
+  background: #f3f4f6;
+  border-radius: 18px;
   padding: 20px;
-  background: #f3f4f6;
-  border-radius: 20px;
   text-align: center;
 }
 
-.current small {
+.repere-current small {
   display: block;
-  font-size: 18px;
-  color: #6b7280;
-  font-weight: 700;
+  font-size: 17px;
+  color: #555;
 }
 
-.current strong {
+.repere-current strong {
   display: block;
-  margin-top: 8px;
-  font-size: 35px;
+  margin-top: 5px;
+  font-size: 34px;
 }
 
-#cameraZone {
-  display: none;
-  margin-top: 18px;
-}
-
-#reader {
-  width: 100%;
-  overflow: hidden;
-  border-radius: 20px;
-  background: #000;
-}
-
-#cameraName {
-  margin-top: 12px;
-  padding: 12px;
-  text-align: center;
-  background: #f3f4f6;
-  border-radius: 12px;
-  font-weight: 800;
-}
-
-.camera-list {
-  margin-top: 12px;
-}
-
-.camera-list select {
-  font-size: 16px;
-  min-height: 50px;
-}
-
-.detected {
-  margin-top: 12px;
-  padding: 12px;
-  background: #ecfdf5;
-  color: #166534;
-  border-radius: 12px;
-  font-weight: 700;
-}
-
-.scan-result {
-  margin-top: 12px;
-  padding: 15px;
-  border-radius: 15px;
-  background: #dcfce7;
-  color: #166534;
-  text-align: center;
-  font-weight: 900;
+.camera-title {
   font-size: 20px;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.camera-select {
+  margin-bottom: 12px;
+}
+
+.video-wrapper {
+  position: relative;
+  width: 100%;
+  background: #000;
+  border-radius: 20px;
+  overflow: hidden;
+  display: none;
+}
+
+video {
+  width: 100%;
+  display: block;
+  background: #000;
+  min-height: 250px;
+  object-fit: cover;
+}
+
+.scan-frame {
+  position: absolute;
+  width: 72%;
+  height: 30%;
+  left: 14%;
+  top: 35%;
+  border: 3px solid #22c55e;
+  border-radius: 15px;
+  box-shadow:
+    0 0 0 9999px rgba(0,0,0,.35);
+  pointer-events: none;
+}
+
+.camera-info {
+  text-align: center;
+  margin-top: 10px;
+  color: #4b5563;
+  font-size: 14px;
 }
 
 .hidden {
   display: none !important;
 }
 
-@media(max-width:500px) {
+.loading {
+  text-align: center;
+  padding: 12px;
+  color: #555;
+}
 
-  body {
-    padding: 10px 8px 30px;
+@media(max-width:480px) {
+
+  .container {
+    padding: 12px;
   }
 
   h1 {
@@ -217,31 +209,18 @@ button:disabled {
 
   .card {
     padding: 18px;
-    border-radius: 20px;
   }
 
-  label {
-    font-size: 18px;
+  .repere-current strong {
+    font-size: 29px;
   }
 
   input,
   select {
-    min-height: 54px;
     font-size: 18px;
-  }
-
-  button {
-    min-height: 58px;
-    font-size: 18px;
-  }
-
-  .current strong {
-    font-size: 28px;
   }
 }
-
 </style>
-
 </head>
 
 
@@ -249,22 +228,18 @@ button:disabled {
 
 <div class="container">
 
-<h1>
-  📋 SCAN PANNEAUX
-</h1>
+<h1>📋 SCAN PANNEAUX</h1>
 
 
 <!-- INTERVENANT -->
 <div class="card">
 
-<label>
-  👷 INTERVENANT
-</label>
+<label>👷 INTERVENANT</label>
 
 <input
   id="intervenant"
   type="text"
-  placeholder="Nom de l'intervenant"
+  placeholder="Votre nom"
   autocomplete="name"
 >
 
@@ -274,34 +249,24 @@ button:disabled {
 <!-- REPERE -->
 <div class="card">
 
-<label>
-  📍 REPÈRE
-</label>
+<label>📍 REPÈRE</label>
 
 <input
   id="repere"
   type="text"
-  placeholder="Exemple : CB1-S1-01"
+  placeholder="CB1-S1-01"
   autocomplete="off"
   autocapitalize="characters"
 >
 
-<div
-  id="repereMessage"
-  class="message info"
->
-  Écrire le repère sous la forme :
-  CB1-S1-01
-</div>
+<div id="repereStatus"></div>
 
-<div class="current">
+<div class="repere-current">
 
-<small>
-  REPÈRE ACTUEL
-</small>
+<small>REPÈRE ACTUEL</small>
 
 <strong id="currentRepere">
-  Aucun
+Aucun
 </strong>
 
 </div>
@@ -312,49 +277,55 @@ button:disabled {
 <!-- CAMERA -->
 <div class="card">
 
+<div class="camera-title">
+📷 CAMÉRA
+</div>
+
+<select
+  id="cameraSelect"
+  class="camera-select"
+>
+<option value="">
+Caméra du navigateur
+</option>
+</select>
+
 <button
   id="openCameraBtn"
-  class="btn-camera"
-  type="button"
+  class="btn-green"
 >
-  📷 OUVRIR CAMÉRA 1×
+📷 OUVRIR CAMÉRA
 </button>
 
 <div
-  id="cameraZone"
+  id="cameraInfo"
+  class="camera-info"
 >
-
-<div id="reader"></div>
-
-<div id="cameraName">
-  📷 Caméra non sélectionnée
+Le navigateur choisira automatiquement la caméra arrière.
 </div>
 
-<div class="camera-list">
+<div
+  id="videoWrapper"
+  class="video-wrapper"
+>
 
-<select id="cameraSelect">
+<video
+  id="video"
+  autoplay
+  muted
+  playsinline
+></video>
 
-<option>
-  Caméra automatique
-</option>
-
-</select>
+<div class="scan-frame"></div>
 
 </div>
 
 <div
-  id="cameraDetected"
-  class="detected"
+  id="scanStatus"
+  class="status info hidden"
 >
-  Caméras : recherche...
+Prêt à scanner...
 </div>
-
-</div>
-
-<div
-  id="cameraMessage"
-  class="message hidden"
-></div>
 
 </div>
 
@@ -362,9 +333,7 @@ button:disabled {
 <!-- SN -->
 <div class="card">
 
-<label>
-  SN
-</label>
+<label>SN</label>
 
 <input
   id="sn"
@@ -374,29 +343,27 @@ button:disabled {
 >
 
 <div
-  id="scanResult"
-  class="scan-result hidden"
+  id="snStatus"
+  class="status hidden"
 ></div>
 
 <button
   id="saveBtn"
-  class="btn-save"
-  type="button"
+  class="btn-blue"
 >
-  ✅ ENREGISTRER SN
+✅ ENREGISTRER SN
 </button>
 
 <button
-  id="newBtn"
-  class="btn-new"
-  type="button"
+  id="newScanBtn"
+  class="btn-dark"
 >
-  🔄 NOUVEAU SCAN
+🔄 NOUVEAU SCAN
 </button>
 
 <div
-  id="resultMessage"
-  class="message hidden"
+  id="googleStatus"
+  class="status hidden"
 ></div>
 
 </div>
@@ -406,218 +373,746 @@ button:disabled {
 
 <script>
 
-/****************************************************
- * CONFIGURATION
- ****************************************************/
+/* =========================================================
+   CONFIGURATION
+========================================================= */
 
-const API_URL =
-  'COLLE_ICI_TON_URL_APPS_SCRIPT';
-
-
-/****************************************************
- * VARIABLES
- ****************************************************/
-
-let scanner = null;
-
-let scannerRunning = false;
-
-let cameraBusy = false;
-
-let cameras = [];
-
-let selectedCameraId = null;
-
-let lastDecodedText = '';
-
-let lastDecodedTime = 0;
+/*
+  ⚠️ REMPLACE CETTE URL PAR TON LIEN APPS SCRIPT /exec
+*/
+const SCRIPT_URL =
+  "https://script.google.com/macros/s/TON_ID_ICI/exec";
 
 
-/****************************************************
- * ELEMENTS
- ****************************************************/
+/* =========================================================
+   VARIABLES
+========================================================= */
+
+let currentStream = null;
+let currentReader = null;
+let scanning = false;
+let cameraDevices = [];
+let currentDeviceId = "";
+
+
+/* =========================================================
+   ELEMENTS
+========================================================= */
 
 const intervenant =
-  document.getElementById('intervenant');
+  document.getElementById("intervenant");
 
 const repere =
-  document.getElementById('repere');
+  document.getElementById("repere");
+
+const repereStatus =
+  document.getElementById("repereStatus");
 
 const currentRepere =
-  document.getElementById('currentRepere');
-
-const repereMessage =
-  document.getElementById('repereMessage');
-
-const sn =
-  document.getElementById('sn');
-
-const saveBtn =
-  document.getElementById('saveBtn');
-
-const newBtn =
-  document.getElementById('newBtn');
-
-const openCameraBtn =
-  document.getElementById('openCameraBtn');
-
-const cameraZone =
-  document.getElementById('cameraZone');
-
-const cameraName =
-  document.getElementById('cameraName');
+  document.getElementById("currentRepere");
 
 const cameraSelect =
-  document.getElementById('cameraSelect');
+  document.getElementById("cameraSelect");
 
-const cameraDetected =
-  document.getElementById('cameraDetected');
+const openCameraBtn =
+  document.getElementById("openCameraBtn");
 
-const cameraMessage =
-  document.getElementById('cameraMessage');
+const cameraInfo =
+  document.getElementById("cameraInfo");
 
-const resultMessage =
-  document.getElementById('resultMessage');
+const videoWrapper =
+  document.getElementById("videoWrapper");
 
-const scanResult =
-  document.getElementById('scanResult');
+const video =
+  document.getElementById("video");
+
+const scanStatus =
+  document.getElementById("scanStatus");
+
+const sn =
+  document.getElementById("sn");
+
+const snStatus =
+  document.getElementById("snStatus");
+
+const saveBtn =
+  document.getElementById("saveBtn");
+
+const newScanBtn =
+  document.getElementById("newScanBtn");
+
+const googleStatus =
+  document.getElementById("googleStatus");
 
 
-/****************************************************
- * REPERE
- ****************************************************/
+/* =========================================================
+   REPERE
+   FORMAT : CBX-SX-XX
+   EXEMPLE : CB1-S1-04
+========================================================= */
 
 function validateRepere(value) {
 
-  value =
-    String(value || '')
-      .trim()
-      .toUpperCase();
+  value = value
+    .trim()
+    .toUpperCase();
 
-  return /^CB\d+-S\d+-\d{2}$/.test(value);
+  /*
+    CB1-S1-01
+    CB2-S5-27
+  */
+
+  const regex =
+    /^CB\d+-S\d+-\d{2}$/;
+
+  return regex.test(value);
 }
 
 
-function updateRepere() {
+repere.addEventListener("input", function() {
 
   const value =
-    repere.value
-      .trim()
-      .toUpperCase();
+    this.value.trim().toUpperCase();
 
-  repere.value = value;
+  this.value = value;
 
   if (!value) {
 
+    repereStatus.innerHTML = "";
+
     currentRepere.textContent =
-      'Aucun';
+      "Aucun";
 
-    repereMessage.className =
-      'message info';
-
-    repereMessage.textContent =
-      'Écrire le repère sous la forme : CB1-S1-01';
-
-    return false;
+    return;
   }
 
   if (validateRepere(value)) {
 
+    repereStatus.innerHTML =
+      '<div class="status success">✅ REPÈRE CORRECT</div>';
+
     currentRepere.textContent =
       value;
 
-    repereMessage.className =
-      'message success';
+  } else {
 
-    repereMessage.textContent =
-      '✅ REPÈRE CORRECT';
+    repereStatus.innerHTML =
+      '<div class="status error">' +
+      '❌ REPÈRE INCORRECT<br>' +
+      'Écrire sous la forme : CBX-SX-XX' +
+      '</div>';
+
+    currentRepere.textContent =
+      "Aucun";
+  }
+
+});
+
+
+/* =========================================================
+   CAMERA
+========================================================= */
+
+
+/*
+  IMPORTANT :
+
+  On demande d'abord au navigateur :
+
+  facingMode = environment
+
+  Donc Android/Chrome choisit normalement
+  la caméra arrière.
+
+  On ne force PAS 0.5x.
+
+  Si le téléphone expose plusieurs caméras,
+  elles seront ensuite affichées dans le select.
+*/
+
+async function requestCameraPermission() {
+
+  try {
+
+    const stream =
+      await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: {
+            ideal: "environment"
+          }
+        },
+        audio: false
+      });
+
+    /*
+      On ferme immédiatement ce premier flux.
+      Il servait uniquement à obtenir
+      l'autorisation et les noms des caméras.
+    */
+
+    stream.getTracks().forEach(track => {
+      track.stop();
+    });
 
     return true;
 
-  } else {
+  } catch (error) {
 
-    currentRepere.textContent =
-      'Aucun';
+    console.error(error);
 
-    repereMessage.className =
-      'message error';
-
-    repereMessage.textContent =
-      '❌ REPÈRE PAS CORRECT — ÉCRIRE COMME : CB1-S1-01';
+    showCameraError(error);
 
     return false;
   }
 }
 
 
-repere.addEventListener(
-  'input',
-  updateRepere
+/*
+  Récupération des caméras.
+*/
+async function loadCameras() {
+
+  if (!navigator.mediaDevices ||
+      !navigator.mediaDevices.enumerateDevices) {
+
+    showCameraError({
+      message:
+        "enumerateDevices non supporté"
+    });
+
+    return;
+  }
+
+  try {
+
+    const devices =
+      await navigator.mediaDevices.enumerateDevices();
+
+    cameraDevices =
+      devices.filter(
+        d => d.kind === "videoinput"
+      );
+
+    cameraSelect.innerHTML = "";
+
+    /*
+      Première option :
+      navigateur / caméra arrière.
+    */
+
+    const defaultOption =
+      document.createElement("option");
+
+    defaultOption.value = "";
+
+    defaultOption.textContent =
+      "📱 Caméra du navigateur — arrière";
+
+    cameraSelect.appendChild(
+      defaultOption
+    );
+
+
+    cameraDevices.forEach(
+      (device, index) => {
+
+        const option =
+          document.createElement("option");
+
+        option.value =
+          device.deviceId;
+
+        let label =
+          device.label ||
+          ("Caméra " + (index + 1));
+
+        option.textContent =
+          "📷 " + label;
+
+        cameraSelect.appendChild(
+          option
+        );
+      }
+    );
+
+
+    /*
+      On ne sélectionne PAS automatiquement
+      une caméra précise.
+
+      Le navigateur garde le choix environment.
+    */
+
+    cameraInfo.textContent =
+      cameraDevices.length +
+      " caméra(s) détectée(s). " +
+      "Le navigateur choisira la caméra arrière.";
+
+  } catch (error) {
+
+    console.error(error);
+
+    showCameraError(error);
+  }
+}
+
+
+/*
+  Ouvre la caméra.
+*/
+async function openCamera(deviceId = "") {
+
+  /*
+    IMPORTANT :
+
+    On arrête complètement l'ancien scanner
+    AVANT de démarrer le nouveau.
+
+    Cela évite :
+    "Cannot transition to a new state,
+     already under transition"
+  */
+
+  await stopCamera();
+
+
+  try {
+
+    let constraints;
+
+
+    if (deviceId) {
+
+      /*
+        Caméra choisie manuellement.
+      */
+
+      constraints = {
+        video: {
+          deviceId: {
+            exact: deviceId
+          }
+        },
+        audio: false
+      };
+
+    } else {
+
+      /*
+        Choix du navigateur :
+        caméra arrière.
+      */
+
+      constraints = {
+        video: {
+          facingMode: {
+            ideal: "environment"
+          }
+        },
+        audio: false
+      };
+    }
+
+
+    currentStream =
+      await navigator.mediaDevices
+        .getUserMedia(constraints);
+
+
+    video.srcObject =
+      currentStream;
+
+    await video.play();
+
+
+    videoWrapper.style.display =
+      "block";
+
+
+    scanning = true;
+
+
+    /*
+      Démarrage du scanner.
+    */
+
+    await startZXing();
+
+
+  } catch (error) {
+
+    console.error(
+      "Erreur caméra:",
+      error
+    );
+
+    scanning = false;
+
+    showCameraError(error);
+  }
+}
+
+
+/*
+  Scanner ZXing.
+*/
+async function startZXing() {
+
+  if (!window.ZXingBrowser) {
+
+    scanStatus.className =
+      "status error";
+
+    scanStatus.textContent =
+      "❌ Scanner non chargé.";
+
+    scanStatus.classList.remove(
+      "hidden"
+    );
+
+    return;
+  }
+
+
+  try {
+
+    currentReader =
+      new ZXingBrowser.BrowserMultiFormatReader();
+
+
+    scanStatus.className =
+      "status success";
+
+    scanStatus.textContent =
+      "🔍 Scanner actif — placez le code dans le cadre.";
+
+    scanStatus.classList.remove(
+      "hidden"
+    );
+
+
+    /*
+      Scan avec le flux vidéo déjà ouvert.
+    */
+
+    currentReader.decodeFromVideoElement(
+      video,
+      (result, error) => {
+
+        if (!scanning) return;
+
+        if (result) {
+
+          const text =
+            result.getText();
+
+          if (text) {
+
+            handleDetectedCode(
+              text,
+              result
+            );
+          }
+        }
+      }
+    );
+
+  } catch (error) {
+
+    console.error(
+      "ZXing error:",
+      error
+    );
+
+    scanStatus.className =
+      "status error";
+
+    scanStatus.textContent =
+      "❌ Impossible de démarrer le scanner.";
+
+    scanStatus.classList.remove(
+      "hidden"
+    );
+  }
+}
+
+
+/*
+  Code détecté.
+*/
+function handleDetectedCode(
+  value,
+  result
+) {
+
+  value =
+    String(value || "").trim();
+
+  if (!value) return;
+
+
+  sn.value =
+    value;
+
+
+  snStatus.className =
+    "status success";
+
+  snStatus.textContent =
+    "✅ Code détecté : " + value;
+
+  snStatus.classList.remove(
+    "hidden"
+  );
+
+
+  /*
+    Vérification immédiate
+    du SN dans Google Sheets.
+  */
+
+  checkSN(value);
+}
+
+
+/*
+  Changement de caméra.
+*/
+cameraSelect.addEventListener(
+  "change",
+  async function() {
+
+    const deviceId =
+      this.value;
+
+    /*
+      Si vide :
+      navigateur / caméra arrière.
+    */
+
+    await openCamera(deviceId);
+  }
 );
 
 
-/****************************************************
- * MESSAGE
- ****************************************************/
+/*
+  Bouton caméra.
+*/
+openCameraBtn.addEventListener(
+  "click",
+  async function() {
 
-function showMessage(
-  element,
-  text,
-  type
-) {
+    this.disabled = true;
 
-  element.textContent =
-    text;
+    try {
 
-  element.className =
-    'message ' + type;
+      /*
+        Première demande d'autorisation.
+      */
 
-  element.classList.remove(
-    'hidden'
+      const allowed =
+        await requestCameraPermission();
+
+      if (!allowed) return;
+
+
+      /*
+        Après autorisation :
+        afficher toutes les caméras.
+      */
+
+      await loadCameras();
+
+
+      /*
+        Ouvrir avec le choix du navigateur.
+      */
+
+      await openCamera("");
+
+    } finally {
+
+      this.disabled = false;
+    }
+
+  }
+);
+
+
+/*
+  Arrêt propre de la caméra.
+*/
+async function stopCamera() {
+
+  scanning = false;
+
+
+  if (currentReader) {
+
+    try {
+
+      currentReader.reset();
+
+    } catch (e) {
+
+      console.log(
+        "Reader déjà arrêté"
+      );
+    }
+
+    currentReader = null;
+  }
+
+
+  if (currentStream) {
+
+    currentStream
+      .getTracks()
+      .forEach(track => {
+
+        try {
+          track.stop();
+        } catch (e) {}
+
+      });
+
+    currentStream = null;
+  }
+
+
+  video.srcObject = null;
+}
+
+
+/* =========================================================
+   ERREUR CAMERA
+========================================================= */
+
+function showCameraError(error) {
+
+  let message =
+    "❌ IMPOSSIBLE D'OUVRIR LA CAMÉRA.";
+
+
+  if (error) {
+
+    if (
+      error.name ===
+      "NotAllowedError"
+    ) {
+
+      message =
+        "❌ CAMÉRA REFUSÉE.<br>" +
+        "Autorisez la caméra dans Chrome.";
+
+    }
+
+    else if (
+      error.name ===
+      "NotFoundError"
+    ) {
+
+      message =
+        "❌ AUCUNE CAMÉRA TROUVÉE.";
+
+    }
+
+    else if (
+      error.name ===
+      "NotReadableError"
+    ) {
+
+      message =
+        "❌ CAMÉRA UTILISÉE PAR UNE AUTRE APPLICATION.";
+
+    }
+
+    else if (
+      error.name ===
+      "OverconstrainedError"
+    ) {
+
+      message =
+        "❌ CAMÉRA NON DISPONIBLE.";
+
+    }
+
+    else {
+
+      message +=
+        "<br>" +
+        String(
+          error.message || ""
+        );
+    }
+  }
+
+
+  scanStatus.className =
+    "status error";
+
+  scanStatus.innerHTML =
+    message;
+
+  scanStatus.classList.remove(
+    "hidden"
   );
 }
 
 
-function hideMessage(element) {
-
-  element.classList.add(
-    'hidden'
-  );
-}
+/* =========================================================
+   GOOGLE SHEETS — JSONP
+========================================================= */
 
 
-/****************************************************
- * API JSONP
- *
- * Utilisé pour éviter les problèmes CORS
- * sur téléphone Android / GitHub Pages.
- ****************************************************/
+/*
+  JSONP :
 
-function apiGet(params) {
+  Cette méthode évite les problèmes CORS
+  fréquents avec Apps Script sur Android.
+*/
+
+function jsonp(params) {
 
   return new Promise(
-    function(resolve, reject) {
+    (resolve, reject) => {
 
       const callbackName =
-        'googleApiCallback_' +
+        "jsonpCallback_" +
         Date.now() +
-        '_' +
+        "_" +
         Math.floor(
           Math.random() * 100000
         );
 
+
       const script =
-        document.createElement('script');
+        document.createElement(
+          "script"
+        );
+
+
+      const query =
+        new URLSearchParams(
+          params
+        );
+
+
+      query.set(
+        "callback",
+        callbackName
+      );
+
 
       const timeout =
         setTimeout(
-          function() {
+          () => {
 
             cleanup();
 
             reject(
               new Error(
-                'Timeout Google Apps Script'
+                "Timeout Google Apps Script"
               )
             );
 
@@ -630,15 +1125,17 @@ function apiGet(params) {
 
         clearTimeout(timeout);
 
-        if (script.parentNode) {
-          script.parentNode.removeChild(script);
-        }
-
         try {
-          delete window[callbackName];
-        } catch(e) {
-          window[callbackName] =
-            undefined;
+          delete window[
+            callbackName
+          ];
+        } catch (e) {}
+
+        if (script.parentNode) {
+
+          script.parentNode.removeChild(
+            script
+          );
         }
       }
 
@@ -652,32 +1149,6 @@ function apiGet(params) {
         };
 
 
-      params.callback =
-        callbackName;
-
-
-      const query =
-        Object.keys(params)
-          .map(function(key) {
-
-            return (
-              encodeURIComponent(key) +
-              '=' +
-              encodeURIComponent(
-                params[key]
-              )
-            );
-
-          })
-          .join('&');
-
-
-      script.src =
-        API_URL +
-        '?'+
-        query;
-
-
       script.onerror =
         function() {
 
@@ -685,771 +1156,148 @@ function apiGet(params) {
 
           reject(
             new Error(
-              'Connexion Google Apps Script impossible'
+              "Impossible de contacter Google Apps Script"
             )
           );
         };
 
 
+      script.src =
+        SCRIPT_URL +
+        "?" +
+        query.toString();
+
+
       document.body.appendChild(
         script
       );
-
     }
   );
 }
 
 
-/****************************************************
- * TEST API
- ****************************************************/
+/* =========================================================
+   CHECK SN
+========================================================= */
 
-async function testAPI() {
+async function checkSN(value) {
 
-  try {
+  value =
+    String(value || "").trim();
 
-    const result =
-      await apiGet({
-        action: 'ping'
-      });
-
-    console.log(
-      'API:',
-      result
-    );
-
-    if (!result.success) {
-      throw new Error(
-        result.message
-      );
-    }
-
-  } catch(error) {
-
-    console.error(
-      'API inaccessible :',
-      error
-    );
-  }
-}
+  if (!value) return;
 
 
-/****************************************************
- * CHOISIR CAMERA ARRIERE
- ****************************************************/
+  snStatus.className =
+    "status info";
 
-function chooseBackCamera(list) {
+  snStatus.textContent =
+    "🔎 Vérification du SN...";
 
-  if (!list || list.length === 0) {
-    return null;
-  }
-
-  // Priorité aux noms indiquant caméra arrière
-  const back =
-    list.find(function(camera) {
-
-      return /back|rear|environment|arrière|trasera/i
-        .test(camera.label);
-
-    });
-
-  if (back) {
-    return back;
-  }
-
-  // Sur beaucoup de téléphones Android,
-  // la dernière caméra est la caméra arrière.
-  if (list.length > 1) {
-    return list[list.length - 1];
-  }
-
-  return list[0];
-}
-
-
-/****************************************************
- * AFFICHER CAMERAS
- ****************************************************/
-
-function displayCameras(list) {
-
-  cameraSelect.innerHTML = '';
-
-  list.forEach(
-    function(camera, index) {
-
-      const option =
-        document.createElement('option');
-
-      option.value =
-        camera.id;
-
-      option.textContent =
-        camera.label ||
-        ('Caméra ' + (index + 1));
-
-      cameraSelect.appendChild(
-        option
-      );
-
-    }
+  snStatus.classList.remove(
+    "hidden"
   );
-
-  cameraDetected.textContent =
-    '📷 ' +
-    list.length +
-    ' caméra(s) détectée(s)';
-}
-
-
-/****************************************************
- * DEMANDER PERMISSION + DETECTER CAMERAS
- ****************************************************/
-
-async function detectCameras() {
-
-  // Première demande d'autorisation
-  let temporaryStream = null;
-
-  try {
-
-    temporaryStream =
-      await navigator.mediaDevices.getUserMedia({
-        video: {
-          facingMode: {
-            ideal: 'environment'
-          }
-        },
-        audio: false
-      });
-
-  } catch(error) {
-
-    console.error(
-      'Permission caméra :',
-      error
-    );
-
-    throw new Error(
-      'Autorisation caméra refusée ou caméra indisponible.'
-    );
-
-  } finally {
-
-    if (temporaryStream) {
-
-      temporaryStream
-        .getTracks()
-        .forEach(function(track) {
-
-          track.stop();
-
-        });
-
-    }
-  }
-
-
-  const devices =
-    await navigator.mediaDevices
-      .enumerateDevices();
-
-
-  cameras =
-    devices.filter(
-      function(device) {
-
-        return device.kind ===
-          'videoinput';
-
-      }
-    );
-
-
-  if (cameras.length === 0) {
-
-    throw new Error(
-      'Aucune caméra détectée.'
-    );
-  }
-
-
-  displayCameras(
-    cameras
-  );
-
-
-  const backCamera =
-    chooseBackCamera(
-      cameras
-    );
-
-
-  if (backCamera) {
-
-    selectedCameraId =
-      backCamera.id;
-
-    cameraSelect.value =
-      selectedCameraId;
-
-    cameraName.textContent =
-      '📷 Caméra choisie : ' +
-      (
-        backCamera.label ||
-        'Caméra arrière'
-      );
-  }
-}
-
-
-/****************************************************
- * OUVRIR SCANNER
- ****************************************************/
-
-async function openScanner() {
-
-  // Protection Android contre double transition
-  if (cameraBusy) {
-    return;
-  }
-
-  cameraBusy = true;
-
-  hideMessage(
-    cameraMessage
-  );
-
-  try {
-
-    // Toujours arrêter avant de redémarrer
-    await stopScanner();
-
-    if (
-      !navigator.mediaDevices ||
-      !navigator.mediaDevices.getUserMedia
-    ) {
-
-      throw new Error(
-        'La caméra n’est pas disponible dans ce navigateur.'
-      );
-    }
-
-
-    cameraZone.style.display =
-      'block';
-
-
-    await detectCameras();
-
-
-    if (!selectedCameraId) {
-
-      throw new Error(
-        'Impossible de sélectionner une caméra.'
-      );
-    }
-
-
-    scanner =
-      new Html5Qrcode(
-        'reader'
-      );
-
-
-    /*
-     * On utilise l'ID de la caméra.
-     *
-     * Cela évite de demander à Android
-     * de choisir une caméra au hasard.
-     */
-
-    await scanner.start(
-
-      selectedCameraId,
-
-      {
-        fps: 10,
-
-        qrbox: function(
-          viewfinderWidth,
-          viewfinderHeight
-        ) {
-
-          /*
-           * CADRAGE DU SCAN
-           *
-           * 0.75 = 75% largeur
-           * 0.50 = 50% hauteur
-           *
-           * Pour modifier :
-           *
-           * PLUS GRAND :
-           * 0.85 / 0.65
-           *
-           * PLUS PETIT :
-           * 0.60 / 0.40
-           */
-
-          const size =
-            Math.min(
-              viewfinderWidth * 0.75,
-              viewfinderHeight * 0.50
-            );
-
-          return {
-            width:
-              Math.floor(size),
-
-            height:
-              Math.floor(size)
-          };
-        },
-
-        aspectRatio: 1.0,
-
-        disableFlip: false
-
-      },
-
-      onScanSuccess,
-
-      function(errorMessage) {
-
-        // Pas besoin d'afficher
-        // les erreurs normales de scan.
-      }
-
-    );
-
-
-    scannerRunning =
-      true;
-
-
-    openCameraBtn.textContent =
-      '⛔ FERMER LA CAMÉRA';
-
-
-  } catch(error) {
-
-    console.error(
-      'CAMERA ERROR:',
-      error
-    );
-
-    showMessage(
-      cameraMessage,
-      '❌ IMPOSSIBLE D’OUVRIR LA CAMÉRA.\n' +
-      error.message,
-      'error'
-    );
-
-
-    cameraZone.style.display =
-      'none';
-
-
-  } finally {
-
-    // IMPORTANT
-    cameraBusy = false;
-  }
-}
-
-
-/****************************************************
- * FERMER SCANNER
- ****************************************************/
-
-async function stopScanner() {
-
-  try {
-
-    if (scanner) {
-
-      if (scannerRunning) {
-
-        try {
-
-          await scanner.stop();
-
-        } catch(error) {
-
-          console.log(
-            'Scanner déjà arrêté.'
-          );
-        }
-      }
-
-
-      try {
-
-        await scanner.clear();
-
-      } catch(error) {
-
-        console.log(
-          'Clear scanner :',
-          error
-        );
-      }
-
-
-      scanner =
-        null;
-
-      scannerRunning =
-        false;
-    }
-
-  } catch(error) {
-
-    console.error(
-      'STOP CAMERA:',
-      error
-    );
-  }
-
-
-  openCameraBtn.textContent =
-    '📷 OUVRIR CAMÉRA 1×';
-}
-
-
-/****************************************************
- * BOUTON CAMERA
- ****************************************************/
-
-openCameraBtn.addEventListener(
-  'click',
-  async function() {
-
-    if (cameraBusy) {
-      return;
-    }
-
-    if (scannerRunning) {
-
-      cameraBusy = true;
-
-      try {
-
-        await stopScanner();
-
-        cameraZone.style.display =
-          'none';
-
-      } finally {
-
-        cameraBusy = false;
-      }
-
-      return;
-    }
-
-    await openScanner();
-  }
-);
-
-
-/****************************************************
- * CHANGER CAMERA
- ****************************************************/
-
-cameraSelect.addEventListener(
-  'change',
-  async function() {
-
-    if (!cameraSelect.value) {
-      return;
-    }
-
-    selectedCameraId =
-      cameraSelect.value;
-
-    const camera =
-      cameras.find(
-        function(item) {
-
-          return item.id ===
-            selectedCameraId;
-
-        }
-      );
-
-    if (camera) {
-
-      cameraName.textContent =
-        '📷 Caméra choisie : ' +
-        (
-          camera.label ||
-          'Caméra'
-        );
-    }
-
-
-    // Redémarrer proprement
-    if (scannerRunning) {
-
-      if (cameraBusy) {
-        return;
-      }
-
-      cameraBusy = true;
-
-      try {
-
-        await stopScanner();
-
-        scanner =
-          new Html5Qrcode(
-            'reader'
-          );
-
-
-        await scanner.start(
-
-          selectedCameraId,
-
-          {
-            fps: 10,
-
-            qrbox: function(
-              viewfinderWidth,
-              viewfinderHeight
-            ) {
-
-              const size =
-                Math.min(
-                  viewfinderWidth * 0.75,
-                  viewfinderHeight * 0.50
-                );
-
-              return {
-                width:
-                  Math.floor(size),
-
-                height:
-                  Math.floor(size)
-              };
-            },
-
-            aspectRatio: 1.0,
-
-            disableFlip: false
-
-          },
-
-          onScanSuccess,
-
-          function() {}
-
-        );
-
-        scannerRunning =
-          true;
-
-      } catch(error) {
-
-        showMessage(
-          cameraMessage,
-          '❌ Impossible de changer de caméra.',
-          'error'
-        );
-
-      } finally {
-
-        cameraBusy = false;
-      }
-    }
-  }
-);
-
-
-/****************************************************
- * SCAN REUSSI
- ****************************************************/
-
-function onScanSuccess(
-  decodedText,
-  decodedResult
-) {
-
-  const now =
-    Date.now();
-
-
-  // Éviter plusieurs lectures
-  // du même code en quelques secondes
-  if (
-    decodedText === lastDecodedText &&
-    now - lastDecodedTime < 3000
-  ) {
-    return;
-  }
-
-
-  lastDecodedText =
-    decodedText;
-
-  lastDecodedTime =
-    now;
-
-
-  const value =
-    String(decodedText || '')
-      .trim();
-
-
-  if (!value) {
-    return;
-  }
-
-
-  sn.value =
-    value;
-
-
-  scanResult.textContent =
-    '✅ Code détecté : ' +
-    value;
-
-
-  scanResult.classList.remove(
-    'hidden'
-  );
-
-
-  // Fermer automatiquement la caméra
-  closeCameraAfterScan();
-}
-
-
-/****************************************************
- * FERMER APRES SCAN
- ****************************************************/
-
-async function closeCameraAfterScan() {
-
-  if (cameraBusy) {
-    return;
-  }
-
-  cameraBusy = true;
-
-  try {
-
-    await stopScanner();
-
-    cameraZone.style.display =
-      'none';
-
-  } finally {
-
-    cameraBusy = false;
-  }
-}
-
-
-/****************************************************
- * VERIFIER SN
- ****************************************************/
-
-async function checkSN() {
-
-  const value =
-    sn.value.trim();
-
-  if (!value) {
-
-    showMessage(
-      resultMessage,
-      '❌ Veuillez scanner ou saisir le SN.',
-      'error'
-    );
-
-    return false;
-  }
 
 
   try {
 
     const result =
-      await apiGet({
-        action: 'checkSN',
+      await jsonp({
+        action: "checkSN",
         sn: value
       });
 
 
-    if (!result.success) {
+    if (
+      result &&
+      result.exists
+    ) {
 
-      showMessage(
-        resultMessage,
-        '❌ ' +
-        result.message,
-        'error'
-      );
+      snStatus.className =
+        "status error";
 
-      return false;
+      snStatus.textContent =
+        "❌ SN DÉJÀ SCANNÉ";
+
+      saveBtn.disabled =
+        true;
+
+      return;
     }
 
 
-    if (result.exists) {
+    if (
+      result &&
+      result.success
+    ) {
 
-      showMessage(
-        resultMessage,
-        '🚫 SN DÉJÀ SCANNÉ',
-        'error'
-      );
+      snStatus.className =
+        "status success";
 
-      return false;
+      snStatus.textContent =
+        "✅ SN DISPONIBLE";
+
+      saveBtn.disabled =
+        false;
+
+      return;
     }
 
 
-    return true;
-
-
-  } catch(error) {
-
-    console.error(
-      error
+    throw new Error(
+      result &&
+      result.message
+        ? result.message
+        : "Réponse invalide"
     );
 
-    showMessage(
-      resultMessage,
-      '❌ Impossible de contacter Google Sheet.',
-      'error'
+
+  } catch (error) {
+
+    console.error(error);
+
+    snStatus.className =
+      "status error";
+
+    snStatus.textContent =
+      "❌ Impossible de vérifier le SN.";
+
+    snStatus.classList.remove(
+      "hidden"
     );
 
-    return false;
+    saveBtn.disabled =
+      false;
   }
 }
 
 
-/****************************************************
- * ENREGISTRER
- ****************************************************/
+/* =========================================================
+   ENREGISTRER
+========================================================= */
 
 saveBtn.addEventListener(
-  'click',
+  "click",
   async function() {
 
-    hideMessage(
-      resultMessage
-    );
-
-
-    // Intervenant
-    const nom =
+    const name =
       intervenant.value.trim();
 
-    if (!nom) {
+    const rep =
+      repere.value.trim().toUpperCase();
 
-      showMessage(
-        resultMessage,
-        '❌ Veuillez saisir l’intervenant.',
-        'error'
+    const serial =
+      sn.value.trim();
+
+
+    /*
+      Validation intervenant.
+    */
+
+    if (!name) {
+
+      showGoogleError(
+        "❌ Écrire le nom de l'intervenant."
       );
 
       intervenant.focus();
@@ -1458,17 +1306,17 @@ saveBtn.addEventListener(
     }
 
 
-    // Repère
-    const repereOK =
-      updateRepere();
+    /*
+      Validation repère.
+    */
 
-    if (!repereOK) {
+    if (!validateRepere(rep)) {
 
-      showMessage(
-        resultMessage,
-        '❌ REPÈRE PAS CORRECT. ÉCRIRE COMME : CB1-S1-01',
-        'error'
-      );
+      repereStatus.innerHTML =
+        '<div class="status error">' +
+        '❌ REPÈRE INCORRECT<br>' +
+        'Format obligatoire : CBX-SX-XX' +
+        '</div>';
 
       repere.focus();
 
@@ -1476,17 +1324,11 @@ saveBtn.addEventListener(
     }
 
 
-    // SN
-    const snValue =
-      sn.value.trim();
+    /*
+      Validation SN.
+    */
 
-    if (!snValue) {
-
-      showMessage(
-        resultMessage,
-        '❌ Veuillez scanner ou saisir le SN.',
-        'error'
-      );
+    if (!serial) {
 
       sn.focus();
 
@@ -1494,218 +1336,249 @@ saveBtn.addEventListener(
     }
 
 
-    saveBtn.disabled =
-      true;
+    this.disabled = true;
 
-    saveBtn.textContent =
-      '⏳ VÉRIFICATION...';
+    googleStatus.className =
+      "status info";
+
+    googleStatus.textContent =
+      "⏳ Enregistrement dans Google Sheet...";
+
+    googleStatus.classList.remove(
+      "hidden"
+    );
 
 
     try {
 
-      // Vérifier doublon AVANT sauvegarde
-      const available =
-        await checkSN();
+      /*
+        Vérification doublon
+        juste avant l'enregistrement.
+      */
+
+      const check =
+        await jsonp({
+          action: "checkSN",
+          sn: serial
+        });
 
 
-      if (!available) {
+      if (check.exists) {
+
+        googleStatus.className =
+          "status error";
+
+        googleStatus.textContent =
+          "❌ SN DÉJÀ SCANNÉ";
+
+        snStatus.className =
+          "status error";
+
+        snStatus.textContent =
+          "❌ SN DÉJÀ SCANNÉ";
+
+        this.disabled = true;
+
         return;
       }
 
 
-      saveBtn.textContent =
-        '⏳ ENREGISTREMENT...';
-
+      /*
+        Enregistrement.
+      */
 
       const result =
-        await apiGet({
+        await jsonp({
 
-          action: 'save',
+          action: "save",
 
           intervenant:
-            nom,
+            name,
 
           repere:
-            repere.value.trim()
-              .toUpperCase(),
+            rep,
 
           sn:
-            snValue,
+            serial,
 
           typeScan:
-            'CAMERA'
+            "QR / CODE-BARRE"
 
         });
 
 
-      if (!result.success) {
+      if (
+        result &&
+        result.success
+      ) {
 
-        if (result.duplicate) {
+        googleStatus.className =
+          "status success";
 
-          showMessage(
-            resultMessage,
-            '🚫 SN DÉJÀ SCANNÉ',
-            'error'
-          );
+        googleStatus.textContent =
+          "✅ SN ENREGISTRÉ DANS GOOGLE SHEETS";
+
+        snStatus.className =
+          "status success";
+
+        snStatus.textContent =
+          "✅ Enregistrement réussi";
+
+        /*
+          Nouveau scan.
+        */
+
+        setTimeout(
+          () => {
+
+            sn.value = "";
+
+            snStatus.classList.add(
+              "hidden"
+            );
+
+            googleStatus.classList.add(
+              "hidden"
+            );
+
+            saveBtn.disabled =
+              false;
+
+          },
+          1500
+        );
+
+
+      } else {
+
+        if (
+          result &&
+          result.duplicate
+        ) {
+
+          googleStatus.className =
+            "status error";
+
+          googleStatus.textContent =
+            "❌ SN DÉJÀ SCANNÉ";
 
         } else {
 
-          showMessage(
-            resultMessage,
-            '❌ ' +
-            result.message,
-            'error'
+          throw new Error(
+            result &&
+            result.message
+              ? result.message
+              : "Erreur inconnue"
           );
         }
-
-        return;
       }
 
 
-      showMessage(
-        resultMessage,
-        '✅ SN ENREGISTRÉ — ' +
-        result.repere +
-        ' — ' +
-        result.sn,
-        'success'
-      );
+    } catch (error) {
 
+      console.error(error);
 
-    } catch(error) {
+      googleStatus.className =
+        "status error";
 
-      console.error(
-        'SAVE ERROR:',
-        error
-      );
-
-
-      showMessage(
-        resultMessage,
-        '❌ Impossible de contacter Google Sheet.',
-        'error'
-      );
-
+      googleStatus.innerHTML =
+        "❌ Impossible de contacter Google Sheet.<br>" +
+        "Vérifiez le déploiement Apps Script.";
 
     } finally {
 
-      saveBtn.disabled =
-        false;
-
-      saveBtn.textContent =
-        '✅ ENREGISTRER SN';
+      this.disabled = false;
     }
 
   }
 );
 
 
-/****************************************************
- * NOUVEAU SCAN
- ****************************************************/
+/* =========================================================
+   NOUVEAU SCAN
+========================================================= */
 
-newBtn.addEventListener(
-  'click',
-  async function() {
+newScanBtn.addEventListener(
+  "click",
+  function() {
 
-    if (cameraBusy) {
-      return;
-    }
+    sn.value = "";
 
-    cameraBusy = true;
+    snStatus.classList.add(
+      "hidden"
+    );
 
-    try {
+    googleStatus.classList.add(
+      "hidden"
+    );
 
-      await stopScanner();
+    saveBtn.disabled =
+      false;
 
-      cameraZone.style.display =
-        'none';
-
-
-      sn.value =
-        '';
-
-      scanResult.textContent =
-        '';
-
-      scanResult.classList.add(
-        'hidden'
-      );
-
-
-      hideMessage(
-        resultMessage
-      );
-
-
-      lastDecodedText =
-        '';
-
-      lastDecodedTime =
-        0;
-
-
-      sn.focus();
-
-
-    } finally {
-
-      cameraBusy = false;
-    }
-  }
-);
-
-
-/****************************************************
- * EMPÊCHER L'ENVOI AVEC ENTER
- ****************************************************/
-
-document.addEventListener(
-  'keydown',
-  function(event) {
+    /*
+      On garde la caméra ouverte.
+      L'utilisateur peut scanner
+      directement un nouveau SN.
+    */
 
     if (
-      event.key === 'Enter' &&
-      document.activeElement === sn
+      currentStream &&
+      scanning
     ) {
 
-      event.preventDefault();
+      scanStatus.className =
+        "status success";
+
+      scanStatus.textContent =
+        "🔍 Prêt pour un nouveau scan.";
+
+      scanStatus.classList.remove(
+        "hidden"
+      );
     }
   }
 );
 
 
-/****************************************************
- * INITIALISATION
- ****************************************************/
+/* =========================================================
+   GOOGLE ERROR
+========================================================= */
+
+function showGoogleError(message) {
+
+  googleStatus.className =
+    "status error";
+
+  googleStatus.innerHTML =
+    message;
+
+  googleStatus.classList.remove(
+    "hidden"
+  );
+}
+
+
+/* =========================================================
+   INITIALISATION
+========================================================= */
+
+saveBtn.disabled = true;
+
+
+/*
+  On NE demande PAS la caméra au chargement.
+
+  C'est important sur Android :
+  la permission doit être déclenchée
+  par l'action de l'utilisateur.
+*/
 
 window.addEventListener(
-  'load',
+  "beforeunload",
   function() {
 
-    updateRepere();
+    stopCamera();
 
-    testAPI();
-
-  }
-);
-
-
-/****************************************************
- * NETTOYAGE QUAND ON QUITTE LA PAGE
- ****************************************************/
-
-window.addEventListener(
-  'beforeunload',
-  function() {
-
-    if (scanner) {
-
-      try {
-        scanner.stop();
-      } catch(e) {}
-
-    }
   }
 );
 
