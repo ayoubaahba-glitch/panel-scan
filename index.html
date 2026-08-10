@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="fr">
-
 <head>
 <meta charset="UTF-8">
 
@@ -155,6 +154,10 @@ button:disabled {
   background: #111827;
 }
 
+.btn-camera2 {
+  background: #7c3aed;
+}
+
 #cameraBox {
   display: none;
   margin-top: 15px;
@@ -186,6 +189,43 @@ button:disabled {
   font-size: 16px;
   font-weight: 800;
   color: #374151;
+}
+
+.camera-list {
+  display: none;
+  margin-top: 15px;
+}
+
+.camera-list-title {
+  font-size: 18px;
+  font-weight: 900;
+  margin-bottom: 8px;
+}
+
+.camera-item {
+  width: 100%;
+  background: #f3f4f6;
+  color: #111827;
+  border: 2px solid #d1d5db;
+  border-radius: 14px;
+  padding: 12px;
+  margin-top: 8px;
+  text-align: left;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.camera-item.active {
+  border-color: #16a34a;
+  background: #dcfce7;
+}
+
+.camera-id {
+  display: block;
+  margin-top: 5px;
+  font-size: 11px;
+  color: #6b7280;
+  word-break: break-all;
 }
 
 .message {
@@ -321,23 +361,44 @@ Aucun
   class="btn-camera"
   type="button"
 >
-📷 OUVRIR LA CAMÉRA
+📷 OUVRIR CAMÉRA 1×
 </button>
 
 <div class="camera-info">
-Caméra arrière + tentative de démarrage à 1×
+La caméra arrière principale est sélectionnée automatiquement.
 </div>
 
 <div
   id="zoomInfo"
   class="zoom-info"
 >
-Zoom : 1×
+Caméra : recherche...
 </div>
 
 <div id="cameraBox">
 
 <div id="reader"></div>
+
+<button
+  id="showCamerasButton"
+  class="btn-camera2"
+  type="button"
+>
+📱 AFFICHER LES CAMÉRAS
+</button>
+
+<div
+  id="cameraList"
+  class="camera-list"
+>
+
+<div class="camera-list-title">
+📱 Caméras détectées
+</div>
+
+<div id="cameraItems"></div>
+
+</div>
 
 <button
   id="closeCameraButton"
@@ -399,8 +460,6 @@ SN
 </div>
 
 
-<!-- LIBRAIRIE SCANNER -->
-
 <script src="https://unpkg.com/html5-qrcode"></script>
 
 
@@ -445,8 +504,17 @@ document.getElementById('cameraButton');
 const closeCameraButton =
 document.getElementById('closeCameraButton');
 
+const showCamerasButton =
+document.getElementById('showCamerasButton');
+
 const cameraBox =
 document.getElementById('cameraBox');
+
+const cameraList =
+document.getElementById('cameraList');
+
+const cameraItems =
+document.getElementById('cameraItems');
 
 const message =
 document.getElementById('message');
@@ -470,14 +538,13 @@ let cameraTrack = null;
 
 let requestCounter = 0;
 
+let detectedCameras = [];
+
+let currentCameraId = null;
+
 
 /**********************************************************
- * VALIDATION REPERE
- *
- * Format :
- * CB1-S1-04
- * CB2-S3-27
- * etc.
+ * REPERE
  **********************************************************/
 
 function isValidRepere(value) {
@@ -581,7 +648,7 @@ message.className =
 
 
 /**********************************************************
- * STATUS SCAN
+ * STATUS
  **********************************************************/
 
 function showScanStatus(text, type) {
@@ -733,7 +800,7 @@ timeout
 
 
 /**********************************************************
- * VERIFICATION SN
+ * CHECK SN
  **********************************************************/
 
 async function checkSN(snValue) {
@@ -809,13 +876,8 @@ return true;
 
 console.error(error);
 
-showScanStatus(
-'❌ Impossible de contacter Google Sheet.',
-'status-error'
-);
-
 showMessage(
-'❌ Impossible de contacter Google Sheet.\nVérifiez Apps Script.',
+'❌ Impossible de contacter Google Sheet.',
 'error'
 );
 
@@ -827,7 +889,7 @@ return false;
 
 
 /**********************************************************
- * ENREGISTRER SN
+ * ENREGISTRER
  **********************************************************/
 
 saveButton.addEventListener(
@@ -988,8 +1050,7 @@ sn.value =
 console.error(error);
 
 showMessage(
-'❌ Impossible de contacter Google Sheet.\n' +
-error.message,
+'❌ Impossible de contacter Google Sheet.',
 'error'
 );
 
@@ -1005,15 +1066,14 @@ false;
 
 
 /**********************************************************
- * NOUVEAU SCAN
+ * NOUVEAU
  **********************************************************/
 
 newButton.addEventListener(
 'click',
 function() {
 
-sn.value =
-'';
+sn.value = '';
 
 scanStatus.style.display =
 'none';
@@ -1028,6 +1088,351 @@ sn.focus();
 
 }
 );
+
+
+/**********************************************************
+ * OBTENIR CAMERAS
+ **********************************************************/
+
+async function getAllCameras() {
+
+try {
+
+const cameras =
+await Html5Qrcode.getCameras();
+
+
+detectedCameras =
+cameras || [];
+
+
+console.log(
+'CAMERAS DETECTEES :',
+detectedCameras
+);
+
+
+displayCameras(
+detectedCameras
+);
+
+
+return detectedCameras;
+
+
+} catch (error) {
+
+console.error(
+'Erreur récupération caméras :',
+error
+);
+
+return [];
+
+}
+
+}
+
+
+/**********************************************************
+ * AFFICHER CAMERAS
+ **********************************************************/
+
+function displayCameras(cameras) {
+
+cameraItems.innerHTML =
+'';
+
+
+if (
+!cameras ||
+cameras.length === 0
+) {
+
+cameraItems.innerHTML =
+'<div class="status status-error">' +
+'❌ Aucune caméra détectée.' +
+'</div>';
+
+return;
+
+}
+
+
+cameras.forEach(
+function(camera, index) {
+
+const button =
+document.createElement('button');
+
+
+button.type =
+'button';
+
+button.className =
+'camera-item';
+
+
+if (
+camera.id ===
+currentCameraId
+) {
+
+button.classList.add(
+'active'
+);
+
+}
+
+
+let label =
+camera.label ||
+(
+'Caméra ' +
+(index + 1)
+);
+
+
+/*
+ * Essayer d'identifier
+ * la caméra.
+ */
+
+const lower =
+label.toLowerCase();
+
+let type =
+'';
+
+
+if (
+lower.includes('back') ||
+lower.includes('rear') ||
+lower.includes('environment') ||
+lower.includes('arrière')
+) {
+
+type =
+' 📷 ARRIÈRE';
+
+}
+
+else if (
+lower.includes('front') ||
+lower.includes('user') ||
+lower.includes('face') ||
+lower.includes('avant')
+) {
+
+type =
+' 🤳 AVANT';
+
+}
+
+
+button.innerHTML =
+'<strong>' +
+(index + 1) +
+'. ' +
+escapeHtml(label) +
+type +
+'</strong>' +
+'<span class="camera-id">' +
+escapeHtml(camera.id) +
+'</span>';
+
+
+button.addEventListener(
+'click',
+function() {
+
+selectCamera(
+camera.id
+);
+
+}
+);
+
+
+cameraItems.appendChild(
+button
+);
+
+}
+);
+
+}
+
+
+/**********************************************************
+ * SECURISER HTML
+ **********************************************************/
+
+function escapeHtml(value) {
+
+return String(value)
+.replace(/&/g, '&amp;')
+.replace(/</g, '&lt;')
+.replace(/>/g, '&gt;')
+.replace(/"/g, '&quot;')
+.replace(/'/g, '&#039;');
+
+}
+
+
+/**********************************************************
+ * CHOISIR CAMERA AUTOMATIQUEMENT
+ **********************************************************/
+
+function chooseBestCamera(cameras) {
+
+if (
+!cameras ||
+cameras.length === 0
+) {
+
+return null;
+
+}
+
+
+let best =
+null;
+
+
+/*
+ * Priorité 1 :
+ * arrière + main
+ */
+
+for (
+const camera of cameras
+) {
+
+const name =
+(
+camera.label ||
+''
+).toLowerCase();
+
+
+if (
+(
+name.includes('back') ||
+name.includes('rear') ||
+name.includes('environment') ||
+name.includes('arrière')
+)
+&&
+(
+name.includes('main') ||
+name.includes('wide') ||
+name.includes('camera 0') ||
+name.includes('camera0')
+)
+) {
+
+best =
+camera;
+
+break;
+
+}
+
+}
+
+
+/*
+ * Priorité 2 :
+ * arrière
+ */
+
+if (!best) {
+
+for (
+const camera of cameras
+) {
+
+const name =
+(
+camera.label ||
+''
+).toLowerCase();
+
+
+if (
+name.includes('back') ||
+name.includes('rear') ||
+name.includes('environment') ||
+name.includes('arrière')
+) {
+
+best =
+camera;
+
+break;
+
+}
+
+}
+
+}
+
+
+/*
+ * Priorité 3 :
+ * éviter front
+ */
+
+if (!best) {
+
+for (
+const camera of cameras
+) {
+
+const name =
+(
+camera.label ||
+''
+).toLowerCase();
+
+
+if (
+!name.includes('front') &&
+!name.includes('user') &&
+!name.includes('face') &&
+!name.includes('avant')
+) {
+
+best =
+camera;
+
+break;
+
+}
+
+}
+
+}
+
+
+/*
+ * Dernière possibilité
+ */
+
+if (!best) {
+
+best =
+cameras[
+cameras.length - 1
+];
+
+}
+
+
+return best;
+
+}
 
 
 /**********************************************************
@@ -1049,6 +1454,9 @@ cameraBox.style.display =
 cameraButton.disabled =
 true;
 
+zoomInfo.textContent =
+'🔎 Recherche de la caméra 1×...';
+
 
 try {
 
@@ -1066,10 +1474,6 @@ qrbox: function(
 viewfinderWidth,
 viewfinderHeight
 ) {
-
-/*
- * CADRAGE LARGE
- */
 
 return {
 
@@ -1116,7 +1520,7 @@ Html5QrcodeSupportedFormats.CODABAR
 
 /******************************************************
  * PREMIERE TENTATIVE :
- * CAMERA ARRIERE
+ * DEMANDER CAMERA ARRIERE
  ******************************************************/
 
 try {
@@ -1124,7 +1528,9 @@ try {
 await html5QrCode.start(
 
 {
-facingMode: "environment"
+facingMode: {
+ideal: 'environment'
+}
 },
 
 config,
@@ -1135,24 +1541,58 @@ onScanFailure
 
 );
 
+
+cameraRunning =
+true;
+
+
+zoomInfo.textContent =
+'📷 Caméra arrière sélectionnée';
+
+
+setTimeout(
+forceZoom1x,
+700
+);
+
+
+/*
+ * Maintenant que l'autorisation
+ * est donnée, récupérer les caméras.
+ */
+
+setTimeout(
+getAllCameras,
+1000
+);
+
+
+return;
+
 }
 
 
 /******************************************************
- * SI LA PREMIERE TENTATIVE ECHOUE :
- * DETECTER LES CAMERAS
+ * SI ECHEC :
+ * LISTER LES CAMERAS
  ******************************************************/
 
 catch (firstError) {
 
 console.log(
-'Première caméra refusée :',
+'Première tentative échouée :',
 firstError
 );
 
+}
+
+
+/*
+ * Récupérer les caméras
+ */
 
 const cameras =
-await Html5Qrcode.getCameras();
+await getAllCameras();
 
 
 if (
@@ -1161,68 +1601,52 @@ cameras.length === 0
 ) {
 
 throw new Error(
-'Aucune caméra détectée par Chrome.'
+'Aucune caméra détectée. Vérifiez l’autorisation caméra de Chrome.'
 );
 
 }
 
 
 /*
- * Par défaut prendre la dernière caméra.
+ * Choisir la meilleure caméra
  */
 
-let cameraId =
-cameras[
-cameras.length - 1
-].id;
+const best =
+chooseBestCamera(
+cameras
+);
 
 
-/*
- * Chercher caméra arrière
- */
+if (!best) {
 
-for (
-let i = 0;
-i < cameras.length;
-i++
-) {
+throw new Error(
+'Impossible de choisir une caméra.'
+);
 
-const label =
+}
+
+
+console.log(
+'CAMERA CHOISIE :',
+best
+);
+
+
+zoomInfo.textContent =
+'📷 Caméra choisie : ' +
 (
-cameras[i].label ||
-''
-).toLowerCase();
-
-
-if (
-
-label.includes('back') ||
-
-label.includes('rear') ||
-
-label.includes('environment') ||
-
-label.includes('arrière')
-
-) {
-
-cameraId =
-cameras[i].id;
-
-break;
-
-}
-
-}
+best.label ||
+best.id
+);
 
 
 /*
- * Deuxième tentative avec ID caméra
+ * Démarrer avec son ID
  */
 
 await html5QrCode.start(
 
-cameraId,
+best.id,
 
 config,
 
@@ -1232,27 +1656,23 @@ onScanFailure
 
 );
 
-}
 
+currentCameraId =
+best.id;
 
 cameraRunning =
 true;
 
 
-/*
- * Attendre que la vidéo existe
- * puis essayer 1×
- */
-
-setTimeout(
-function() {
-
-forceZoom1x();
-
-},
-700
+displayCameras(
+detectedCameras
 );
 
+
+setTimeout(
+forceZoom1x,
+700
+);
 
 } catch (error) {
 
@@ -1269,28 +1689,12 @@ cameraButton.disabled =
 false;
 
 
-let msg =
-'❌ IMPOSSIBLE D’OUVRIR LA CAMÉRA.';
-
-
-if (
-error &&
-error.message
-) {
-
-msg +=
-'\n\n' +
-error.message;
-
-}
-
-
-msg +=
-'\n\nVérifiez l’autorisation caméra de Chrome.';
-
-
 showMessage(
-msg,
+'❌ IMPOSSIBLE D’OUVRIR LA CAMÉRA.\n\n' +
+(
+error.message ||
+error
+),
 'error'
 );
 
@@ -1301,7 +1705,221 @@ msg,
 
 
 /**********************************************************
- * SCAN REUSSI
+ * AFFICHER / CACHER LISTE CAMERAS
+ **********************************************************/
+
+showCamerasButton.addEventListener(
+'click',
+async function() {
+
+if (
+cameraList.style.display ===
+'block'
+) {
+
+cameraList.style.display =
+'none';
+
+return;
+
+}
+
+
+cameraList.style.display =
+'block';
+
+
+if (
+detectedCameras.length === 0
+) {
+
+await getAllCameras();
+
+} else {
+
+displayCameras(
+detectedCameras
+);
+
+}
+
+}
+);
+
+
+/**********************************************************
+ * CHANGER CAMERA
+ **********************************************************/
+
+async function selectCamera(
+cameraId
+) {
+
+if (!cameraId) {
+return;
+}
+
+
+if (
+cameraRunning &&
+cameraId ===
+currentCameraId
+) {
+
+return;
+
+}
+
+
+try {
+
+showMessage(
+'⏳ Changement de caméra...',
+'info'
+);
+
+
+if (cameraRunning) {
+
+await stopCamera();
+
+}
+
+
+cameraBox.style.display =
+'block';
+
+cameraButton.disabled =
+true;
+
+
+html5QrCode =
+new Html5Qrcode(
+'reader'
+);
+
+
+const config = {
+
+fps: 10,
+
+qrbox: function(
+viewfinderWidth,
+viewfinderHeight
+) {
+
+return {
+
+width:
+Math.floor(
+viewfinderWidth * 0.90
+),
+
+height:
+Math.floor(
+viewfinderHeight * 0.65
+)
+
+};
+
+},
+
+formatsToSupport: [
+
+Html5QrcodeSupportedFormats.QR_CODE,
+
+Html5QrcodeSupportedFormats.CODE_128,
+
+Html5QrcodeSupportedFormats.CODE_39,
+
+Html5QrcodeSupportedFormats.CODE_93,
+
+Html5QrcodeSupportedFormats.EAN_13,
+
+Html5QrcodeSupportedFormats.EAN_8,
+
+Html5QrcodeSupportedFormats.UPC_A,
+
+Html5QrcodeSupportedFormats.UPC_E,
+
+Html5QrcodeSupportedFormats.ITF,
+
+Html5QrcodeSupportedFormats.CODABAR
+
+]
+
+};
+
+
+await html5QrCode.start(
+
+cameraId,
+
+config,
+
+onScanSuccess,
+
+onScanFailure
+
+);
+
+
+currentCameraId =
+cameraId;
+
+cameraRunning =
+true;
+
+
+displayCameras(
+detectedCameras
+);
+
+
+zoomInfo.textContent =
+'📷 Caméra sélectionnée';
+
+
+showMessage(
+'✅ Caméra changée.',
+'success'
+);
+
+
+setTimeout(
+forceZoom1x,
+700
+);
+
+
+} catch (error) {
+
+console.error(
+'Erreur changement caméra :',
+error
+);
+
+
+cameraButton.disabled =
+false;
+
+
+showMessage(
+'❌ Impossible d’utiliser cette caméra.\n' +
+(
+error.message ||
+''
+),
+'error'
+);
+
+}
+
+}
+
+
+/**********************************************************
+ * SCAN SUCCESS
  **********************************************************/
 
 async function onScanSuccess(
@@ -1330,7 +1948,7 @@ await stopCamera();
 
 
 /**********************************************************
- * ERREUR NORMALE DE RECHERCHE
+ * SCAN FAILURE
  **********************************************************/
 
 function onScanFailure(
@@ -1345,7 +1963,7 @@ errorMessage
 
 
 /**********************************************************
- * FORCER ZOOM 1×
+ * ZOOM 1×
  **********************************************************/
 
 async function forceZoom1x() {
@@ -1361,7 +1979,7 @@ document.querySelector(
 if (!video) {
 
 zoomInfo.textContent =
-'Zoom : automatique';
+'📷 Caméra active';
 
 return;
 
@@ -1375,7 +1993,7 @@ video.srcObject;
 if (!stream) {
 
 zoomInfo.textContent =
-'Zoom : automatique';
+'📷 Caméra active';
 
 return;
 
@@ -1387,9 +2005,6 @@ stream.getVideoTracks();
 
 
 if (!tracks.length) {
-
-zoomInfo.textContent =
-'Zoom : automatique';
 
 return;
 
@@ -1414,23 +2029,27 @@ let zoom =
 
 
 if (
-capabilities.zoom.min !== undefined &&
-zoom < capabilities.zoom.min
+capabilities.zoom.min !== undefined
 ) {
 
 zoom =
-capabilities.zoom.min;
+Math.max(
+zoom,
+capabilities.zoom.min
+);
 
 }
 
 
 if (
-capabilities.zoom.max !== undefined &&
-zoom > capabilities.zoom.max
+capabilities.zoom.max !== undefined
 ) {
 
 zoom =
-capabilities.zoom.max;
+Math.min(
+zoom,
+capabilities.zoom.max
+);
 
 }
 
@@ -1447,26 +2066,26 @@ zoom: zoom
 
 
 zoomInfo.textContent =
-'Zoom : ' +
+'📷 Zoom : ' +
 Number(zoom).toFixed(1) +
 '×';
 
 } else {
 
 zoomInfo.textContent =
-'Zoom : automatique';
+'📷 Caméra active — zoom contrôlé par Android';
 
 }
 
 } catch (error) {
 
 console.log(
-'Zoom 1× non disponible :',
+'Zoom non disponible :',
 error
 );
 
 zoomInfo.textContent =
-'Zoom : automatique';
+'📷 Caméra active';
 
 }
 
@@ -1589,7 +2208,7 @@ cameraButton.disabled =
 false;
 
 zoomInfo.textContent =
-'Zoom : 1×';
+'Caméra : arrêtée';
 
 }
 
@@ -1609,17 +2228,15 @@ await jsonp({
 action: 'test'
 });
 
-
 console.log(
-'TEST GOOGLE SHEET :',
+'GOOGLE APPS SCRIPT :',
 result
 );
-
 
 } catch (error) {
 
 console.error(
-'TEST GOOGLE SHEET ERROR :',
+'GOOGLE APPS SCRIPT ERROR :',
 error
 );
 
@@ -1630,5 +2247,4 @@ error
 </script>
 
 </body>
-
 </html>
