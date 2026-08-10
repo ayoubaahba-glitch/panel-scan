@@ -1,620 +1,1492 @@
-
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
+
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+<meta
+  name="viewport"
+  content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+>
+
 <title>SCAN PANNEAUX</title>
 
 <style>
-*{box-sizing:border-box}
-body{margin:0;padding:20px 12px 40px;background:#eef1f5;font-family:Arial,Helvetica,sans-serif;color:#111827}
-.container{width:100%;max-width:700px;margin:auto}
-h1{text-align:center;font-size:38px;margin:10px 0 25px;font-weight:900}
-.card{background:#fff;border-radius:28px;padding:24px;margin-bottom:22px;box-shadow:0 8px 25px rgba(0,0,0,.08)}
-label{display:block;font-size:24px;font-weight:900;margin-bottom:12px}
-input,select{width:100%;height:64px;border-radius:18px;border:3px solid #d1d5db;padding:0 18px;font-size:22px;outline:none;background:#fff}
-input:focus,select:focus{border-color:#2563eb}
-#repere{text-transform:uppercase}
-.repere-ok{background:#dcfce7;color:#166534;border-color:#16a34a}
-.repere-error{background:#fee2e2;color:#991b1b;border-color:#dc2626}
-.status{margin-top:10px;padding:12px;border-radius:14px;text-align:center;font-size:18px;font-weight:800}
-.status-ok{background:#dcfce7;color:#166534}
-.status-error{background:#fee2e2;color:#991b1b}
-.status-info{background:#dbeafe;color:#1e40af}
-.current{margin-top:16px;background:#f3f4f6;border-radius:20px;padding:18px;text-align:center}
-.current-title{font-size:18px;color:#6b7280;font-weight:700}
-.current-value{margin-top:5px;font-size:38px;font-weight:900}
-button{width:100%;min-height:68px;border:none;border-radius:20px;margin-top:14px;padding:12px 18px;font-size:23px;font-weight:900;color:#fff;cursor:pointer}
-button:disabled{opacity:.55;cursor:not-allowed}
-.btn-camera{background:#16a34a}
-.btn-save{background:#2563eb}
-.btn-new{background:#111827}
-.message{margin-top:15px;border-radius:18px;padding:18px;text-align:center;font-size:20px;font-weight:900;display:none;white-space:pre-line}
-.message.success{display:block;background:#dcfce7;color:#166534}
-.message.error{display:block;background:#fee2e2;color:#991b1b}
-.message.info{display:block;background:#dbeafe;color:#1e40af}
-#cameraBox{display:none;margin-top:15px}
-#reader{width:100%;overflow:hidden;border-radius:20px;background:#000;min-height:100px}
-.camera-info{text-align:center;font-size:16px;color:#6b7280;margin-top:8px}
-.camera-choice{margin-top:12px}
-@media(max-width:600px){
-body{padding:12px 8px 30px}h1{font-size:34px}.card{padding:20px;border-radius:24px}
-label{font-size:21px}input,select{font-size:20px}button{font-size:20px}.current-value{font-size:32px}
+
+* {
+  box-sizing: border-box;
 }
+
+body {
+
+  margin: 0;
+
+  padding: 20px 12px 40px;
+
+  background:
+    #eef1f5;
+
+  font-family:
+    Arial,
+    Helvetica,
+    sans-serif;
+
+  color: #111827;
+
+}
+
+.container {
+
+  width: 100%;
+
+  max-width: 700px;
+
+  margin: auto;
+
+}
+
+h1 {
+
+  text-align: center;
+
+  font-size: 38px;
+
+  margin: 10px 0 25px;
+
+  font-weight: 900;
+
+}
+
+.card {
+
+  background: white;
+
+  border-radius: 28px;
+
+  padding: 24px;
+
+  margin-bottom: 22px;
+
+  box-shadow:
+    0 8px 25px rgba(0,0,0,.08);
+
+}
+
+label {
+
+  display: block;
+
+  font-size: 24px;
+
+  font-weight: 900;
+
+  margin-bottom: 12px;
+
+}
+
+input,
+select {
+
+  width: 100%;
+
+  height: 64px;
+
+  border-radius: 18px;
+
+  border: 3px solid #d1d5db;
+
+  padding: 0 18px;
+
+  font-size: 22px;
+
+  outline: none;
+
+  background: white;
+
+}
+
+input:focus,
+select:focus {
+
+  border-color: #2563eb;
+
+}
+
+#intervenant {
+
+  text-transform: none;
+
+}
+
+#repere {
+
+  text-transform: uppercase;
+
+}
+
+.repere-ok {
+
+  background: #dcfce7;
+
+  color: #166534;
+
+  border-color: #16a34a;
+
+}
+
+.repere-error {
+
+  background: #fee2e2;
+
+  color: #991b1b;
+
+  border-color: #dc2626;
+
+}
+
+.status {
+
+  margin-top: 10px;
+
+  padding: 12px;
+
+  border-radius: 14px;
+
+  text-align: center;
+
+  font-size: 18px;
+
+  font-weight: 800;
+
+}
+
+.status-ok {
+
+  background: #dcfce7;
+
+  color: #166534;
+
+}
+
+.status-error {
+
+  background: #fee2e2;
+
+  color: #991b1b;
+
+}
+
+.current {
+
+  margin-top: 16px;
+
+  background: #f3f4f6;
+
+  border-radius: 20px;
+
+  padding: 18px;
+
+  text-align: center;
+
+}
+
+.current-title {
+
+  font-size: 18px;
+
+  color: #6b7280;
+
+  font-weight: 700;
+
+}
+
+.current-value {
+
+  margin-top: 5px;
+
+  font-size: 38px;
+
+  font-weight: 900;
+
+}
+
+button {
+
+  width: 100%;
+
+  min-height: 68px;
+
+  border: none;
+
+  border-radius: 20px;
+
+  margin-top: 14px;
+
+  padding: 12px 18px;
+
+  font-size: 23px;
+
+  font-weight: 900;
+
+  color: white;
+
+  cursor: pointer;
+
+}
+
+button:disabled {
+
+  opacity: .55;
+
+  cursor: not-allowed;
+
+}
+
+.btn-camera {
+
+  background: #16a34a;
+
+}
+
+.btn-save {
+
+  background: #2563eb;
+
+}
+
+.btn-new {
+
+  background: #111827;
+
+}
+
+.message {
+
+  margin-top: 15px;
+
+  border-radius: 18px;
+
+  padding: 18px;
+
+  text-align: center;
+
+  font-size: 20px;
+
+  font-weight: 900;
+
+  display: none;
+
+}
+
+.message.success {
+
+  display: block;
+
+  background: #dcfce7;
+
+  color: #166534;
+
+}
+
+.message.error {
+
+  display: block;
+
+  background: #fee2e2;
+
+  color: #991b1b;
+
+}
+
+.message.info {
+
+  display: block;
+
+  background: #dbeafe;
+
+  color: #1e40af;
+
+}
+
+
+/* CAMERA */
+
+#cameraBox {
+
+  display: none;
+
+  margin-top: 15px;
+
+}
+
+#reader {
+
+  width: 100%;
+
+  overflow: hidden;
+
+  border-radius: 20px;
+
+  background: #000;
+
+}
+
+.camera-info {
+
+  text-align: center;
+
+  font-size: 16px;
+
+  color: #6b7280;
+
+  margin-top: 8px;
+
+}
+
+
+/* MOBILE */
+
+@media (max-width: 600px) {
+
+  body {
+    padding: 12px 8px 30px;
+  }
+
+  h1 {
+    font-size: 34px;
+  }
+
+  .card {
+    padding: 20px;
+    border-radius: 24px;
+  }
+
+  label {
+    font-size: 21px;
+  }
+
+  input,
+  select {
+    font-size: 20px;
+  }
+
+  button {
+    font-size: 20px;
+  }
+
+  .current-value {
+    font-size: 32px;
+  }
+
+}
+
 </style>
+
 </head>
 
+
 <body>
+
 <div class="container">
+
+
 <h1>📋 SCAN PANNEAUX</h1>
 
-<div class="card">
-<label for="intervenant">👷 INTERVENANT</label>
-<input id="intervenant" type="text" placeholder="Nom de l'intervenant" autocomplete="name">
-</div>
+
+<!-- =====================================================
+     INTERVENANT
+====================================================== -->
 
 <div class="card">
-<label for="repere">📍 REPÈRE</label>
-<input id="repere" type="text" placeholder="Exemple : CB1-S1-01" maxlength="20" autocomplete="off">
 
-<div id="repereStatus" class="status">
-Écrire le repère sous la forme CBX-SX-XX
+  <label for="intervenant">
+    👷 INTERVENANT
+  </label>
+
+  <input
+    id="intervenant"
+    type="text"
+    placeholder="Nom de l'intervenant"
+    autocomplete="name"
+  >
+
 </div>
 
-<div class="current">
-<div class="current-title">REPÈRE ACTUEL</div>
-<div id="repereCurrent" class="current-value">Aucun</div>
-</div>
-</div>
+
+<!-- =====================================================
+     REPERE
+====================================================== -->
 
 <div class="card">
-<label for="cameraSelect">📷 CHOIX DE CAMÉRA</label>
 
-<select id="cameraSelect" class="camera-choice">
-<option value="">📱 Caméra arrière par défaut</option>
-</select>
+  <label for="repere">
+    📍 REPÈRE
+  </label>
 
-<div class="camera-info">
-Le choix reste visible. Si Android expose la caméra 0.5× / Ultra Wide, elle apparaîtra ici.
+  <input
+    id="repere"
+    type="text"
+    placeholder="Exemple : CB1-S1-01"
+    maxlength="20"
+    autocomplete="off"
+  >
+
+  <div
+    id="repereStatus"
+    class="status"
+  >
+    Écrire le repère sous la forme CBX-SX-XX
+  </div>
+
+  <div class="current">
+
+    <div class="current-title">
+      REPÈRE ACTUEL
+    </div>
+
+    <div
+      id="repereCurrent"
+      class="current-value"
+    >
+      Aucun
+    </div>
+
+  </div>
+
 </div>
 
-<button id="cameraButton" class="btn-camera" type="button">
-📷 OUVRIR LA CAMÉRA
-</button>
 
-<div id="cameraBox">
-<div id="reader"></div>
-
-<button id="closeCameraButton" class="btn-new" type="button">
-❌ FERMER LA CAMÉRA
-</button>
-</div>
-</div>
+<!-- =====================================================
+     CAMERA
+====================================================== -->
 
 <div class="card">
-<label for="sn">SN</label>
-<input id="sn" type="text" placeholder="Scanner ou saisir le SN" autocomplete="off">
 
-<div id="scanStatus" class="status" style="display:none"></div>
+  <button
+    id="cameraButton"
+    class="btn-camera"
+    type="button"
+  >
+    📷 OUVRIR LA CAMÉRA
+  </button>
 
-<button id="saveButton" class="btn-save" type="button">
-✅ ENREGISTRER SN
-</button>
+  <div class="camera-info">
+    Compatible QR Code et plusieurs formats de codes-barres.
+  </div>
 
-<button id="newButton" class="btn-new" type="button">
-🔄 NOUVEAU SCAN
-</button>
+  <div id="cameraBox">
 
-<div id="message" class="message"></div>
+    <div id="reader"></div>
+
+    <button
+      id="closeCameraButton"
+      class="btn-new"
+      type="button"
+    >
+      ❌ FERMER LA CAMÉRA
+    </button>
+
+  </div>
+
 </div>
+
+
+<!-- =====================================================
+     SN
+====================================================== -->
+
+<div class="card">
+
+  <label for="sn">
+    SN
+  </label>
+
+  <input
+    id="sn"
+    type="text"
+    placeholder="Scanner ou saisir le SN"
+    autocomplete="off"
+  >
+
+  <div
+    id="scanStatus"
+    class="status"
+    style="display:none;"
+  ></div>
+
+
+  <button
+    id="saveButton"
+    class="btn-save"
+    type="button"
+  >
+    ✅ ENREGISTRER SN
+  </button>
+
+
+  <button
+    id="newButton"
+    class="btn-new"
+    type="button"
+  >
+    🔄 NOUVEAU SCAN
+  </button>
+
+
+  <div
+    id="message"
+    class="message"
+  ></div>
+
 </div>
+
+
+</div>
+
+
+<!-- =====================================================
+     LIBRAIRIE SCANNER
+====================================================== -->
 
 <script src="https://unpkg.com/html5-qrcode"></script>
 
+
 <script>
-/* =========================================================
-   CONFIGURATION — NE PAS MODIFIER
-========================================================= */
+
+/**********************************************************
+ * CONFIGURATION
+ **********************************************************/
+
 const API_URL =
-'https://script.google.com/macros/s/AKfycbwhfATP060XPj9KMcgOvTnnKnP96RJWV_VkznC0733WFvWcQ_oX7XOgBIQct4osb2o1/exec';
+  'https://script.google.com/macros/s/AKfycbwhfATP060XPj9KMcgOvTnnKnP96RJWV_VkznC0733WFvWcQ_oX7XOgBIQct4osb2o1/exec';
 
-/* =========================================================
-   ELEMENTS
-========================================================= */
-const intervenant=document.getElementById('intervenant');
-const repere=document.getElementById('repere');
-const repereStatus=document.getElementById('repereStatus');
-const repereCurrent=document.getElementById('repereCurrent');
-const sn=document.getElementById('sn');
-const saveButton=document.getElementById('saveButton');
-const newButton=document.getElementById('newButton');
-const cameraButton=document.getElementById('cameraButton');
-const closeCameraButton=document.getElementById('closeCameraButton');
-const cameraBox=document.getElementById('cameraBox');
-const cameraSelect=document.getElementById('cameraSelect');
-const message=document.getElementById('message');
-const scanStatus=document.getElementById('scanStatus');
 
-/* =========================================================
-   VARIABLES
-========================================================= */
-let html5QrCode=null;
-let cameraRunning=false;
-let cameraBusy=false;
-let requestCounter=0;
+/**********************************************************
+ * ELEMENTS
+ **********************************************************/
 
-/* =========================================================
-   REPERE
-========================================================= */
-function isValidRepere(value){
-return /^CB\d+-S\d+-\d{2}$/i.test(value.trim());
+const intervenant =
+  document.getElementById('intervenant');
+
+const repere =
+  document.getElementById('repere');
+
+const repereStatus =
+  document.getElementById('repereStatus');
+
+const repereCurrent =
+  document.getElementById('repereCurrent');
+
+const sn =
+  document.getElementById('sn');
+
+const saveButton =
+  document.getElementById('saveButton');
+
+const newButton =
+  document.getElementById('newButton');
+
+const cameraButton =
+  document.getElementById('cameraButton');
+
+const closeCameraButton =
+  document.getElementById('closeCameraButton');
+
+const cameraBox =
+  document.getElementById('cameraBox');
+
+const message =
+  document.getElementById('message');
+
+const scanStatus =
+  document.getElementById('scanStatus');
+
+
+/**********************************************************
+ * VARIABLES
+ **********************************************************/
+
+let html5QrCode = null;
+
+let cameraRunning = false;
+
+let requestCounter = 0;
+
+
+/**********************************************************
+ * REPERE
+ *
+ * FORMAT :
+ *
+ * CB1-S1-01
+ * CB2-S16-27
+ * CB10-S5-99
+ *
+ **********************************************************/
+
+function isValidRepere(value) {
+
+  return /^CB\d+-S\d+-\d{2}$/i.test(
+    value.trim()
+  );
+
 }
 
-repere.addEventListener('input',function(){
-this.value=this.value.toUpperCase();
-const value=this.value.trim();
 
-if(!value){
-repere.classList.remove('repere-ok','repere-error');
-repereStatus.className='status';
-repereStatus.textContent='Écrire le repère sous la forme CBX-SX-XX';
-repereCurrent.textContent='Aucun';
-return;
-}
+/**********************************************************
+ * VALIDATION REPERE EN DIRECT
+ **********************************************************/
 
-if(isValidRepere(value)){
-repere.classList.remove('repere-error');
-repere.classList.add('repere-ok');
-repereStatus.className='status status-ok';
-repereStatus.textContent='✅ REPÈRE CORRECT';
-repereCurrent.textContent=value;
-}else{
-repere.classList.remove('repere-ok');
-repere.classList.add('repere-error');
-repereStatus.className='status status-error';
-repereStatus.textContent='❌ REPÈRE PAS CORRECT — ÉCRIRE COMME ÇA : CBX-SX-XX';
-repereCurrent.textContent='Aucun';
-}
+repere.addEventListener('input', function() {
+
+  // Toujours en majuscules
+  this.value =
+    this.value.toUpperCase();
+
+  const value =
+    this.value.trim();
+
+  if (!value) {
+
+    repere.classList.remove(
+      'repere-ok',
+      'repere-error'
+    );
+
+    repereStatus.className =
+      'status';
+
+    repereStatus.textContent =
+      'Écrire le repère sous la forme CBX-SX-XX';
+
+    repereCurrent.textContent =
+      'Aucun';
+
+    return;
+  }
+
+
+  if (isValidRepere(value)) {
+
+    repere.classList.remove(
+      'repere-error'
+    );
+
+    repere.classList.add(
+      'repere-ok'
+    );
+
+    repereStatus.className =
+      'status status-ok';
+
+    repereStatus.textContent =
+      '✅ REPÈRE CORRECT';
+
+    repereCurrent.textContent =
+      value;
+
+  } else {
+
+    repere.classList.remove(
+      'repere-ok'
+    );
+
+    repere.classList.add(
+      'repere-error'
+    );
+
+    repereStatus.className =
+      'status status-error';
+
+    repereStatus.textContent =
+      '❌ REPÈRE PAS CORRECT — ÉCRIRE COMME ÇA : CBX-SX-XX';
+
+    repereCurrent.textContent =
+      'Aucun';
+
+  }
+
 });
 
-/* =========================================================
-   MESSAGES
-========================================================= */
-function showMessage(text,type){
-message.textContent=text;
-message.className='message '+type;
+
+/**********************************************************
+ * MESSAGE
+ **********************************************************/
+
+function showMessage(
+  text,
+  type
+) {
+
+  message.textContent =
+    text;
+
+  message.className =
+    'message ' + type;
+
 }
 
-function showScanStatus(text,type){
-scanStatus.style.display='block';
-scanStatus.textContent=text;
-scanStatus.className='status '+type;
+
+/**********************************************************
+ * STATUS SCAN
+ **********************************************************/
+
+function showScanStatus(
+  text,
+  type
+) {
+
+  scanStatus.style.display =
+    'block';
+
+  scanStatus.textContent =
+    text;
+
+  scanStatus.className =
+    'status ' + type;
+
 }
 
-/* =========================================================
-   JSONP GOOGLE SHEETS
-========================================================= */
-function jsonp(params,timeout=15000){
-return new Promise(function(resolve,reject){
-const callbackName='__scanCallback_'+Date.now()+'_'+(++requestCounter);
-const script=document.createElement('script');
-let timer;
 
-function cleanup(){
-clearTimeout(timer);
-try{delete window[callbackName]}catch(e){window[callbackName]=undefined}
-if(script.parentNode)script.parentNode.removeChild(script);
+/**********************************************************
+ * JSONP
+ *
+ * IMPORTANT :
+ * PAS DE FETCH()
+ *
+ * Cela permet d'éviter les problèmes CORS
+ * sur Android / Chrome mobile.
+ **********************************************************/
+
+function jsonp(
+  params,
+  timeout = 15000
+) {
+
+  return new Promise(
+    function(resolve, reject) {
+
+      const callbackName =
+        '__scanCallback_' +
+        Date.now() +
+        '_' +
+        (++requestCounter);
+
+      const script =
+        document.createElement('script');
+
+      let timer;
+
+
+      function cleanup() {
+
+        clearTimeout(timer);
+
+        try {
+          delete window[callbackName];
+        } catch (e) {
+          window[callbackName] =
+            undefined;
+        }
+
+        if (script.parentNode) {
+          script.parentNode.removeChild(
+            script
+          );
+        }
+
+      }
+
+
+      window[callbackName] =
+        function(data) {
+
+          cleanup();
+
+          resolve(data);
+
+        };
+
+
+      const query =
+        new URLSearchParams();
+
+
+      Object.keys(params).forEach(
+        function(key) {
+
+          query.append(
+            key,
+            params[key]
+          );
+
+        }
+      );
+
+
+      query.append(
+        'callback',
+        callbackName
+      );
+
+
+      query.append(
+        '_',
+        Date.now()
+      );
+
+
+      script.src =
+        API_URL +
+        '?' +
+        query.toString();
+
+
+      script.async = true;
+
+
+      script.onerror =
+        function() {
+
+          cleanup();
+
+          reject(
+            new Error(
+              'Impossible de contacter Google Apps Script.'
+            )
+          );
+
+        };
+
+
+      document.body.appendChild(
+        script
+      );
+
+
+      timer =
+        setTimeout(
+          function() {
+
+            cleanup();
+
+            reject(
+              new Error(
+                'Délai dépassé. Google Apps Script ne répond pas.'
+              )
+            );
+
+          },
+          timeout
+        );
+
+    }
+  );
+
 }
 
-window[callbackName]=function(data){
-cleanup();
-resolve(data);
-};
 
-const query=new URLSearchParams();
-Object.keys(params).forEach(function(key){
-query.append(key,params[key]);
-});
-query.append('callback',callbackName);
-query.append('_',Date.now());
+/**********************************************************
+ * VERIFIER SN
+ **********************************************************/
 
-script.src=API_URL+'?'+query.toString();
-script.async=true;
+async function checkSN(snValue) {
 
-script.onerror=function(){
-cleanup();
-reject(new Error('Impossible de contacter Google Apps Script.'));
-};
+  try {
 
-document.body.appendChild(script);
+    showScanStatus(
+      '🔎 Vérification du SN...',
+      'info'
+    );
 
-timer=setTimeout(function(){
-cleanup();
-reject(new Error('Délai dépassé. Google Apps Script ne répond pas.'));
-},timeout);
-});
+
+    const result =
+      await jsonp({
+
+        action: 'check',
+
+        sn: snValue
+
+      });
+
+
+    if (!result.success) {
+
+      showScanStatus(
+        '❌ ' +
+        (result.message ||
+        'Erreur de vérification.'),
+        'error'
+      );
+
+      return false;
+
+    }
+
+
+    if (result.exists) {
+
+      showScanStatus(
+        '❌ SN DÉJÀ SCANNÉ — REPÈRE : ' +
+        (result.repere || 'inconnu'),
+        'error'
+      );
+
+      showMessage(
+        '❌ SN DÉJÀ SCANNÉ\nRepère : ' +
+        (result.repere || 'inconnu'),
+        'error'
+      );
+
+      return false;
+
+    }
+
+
+    showScanStatus(
+      '✅ SN DISPONIBLE',
+      'success'
+    );
+
+    return true;
+
+
+  } catch (error) {
+
+    console.error(error);
+
+    showScanStatus(
+      '❌ Impossible de contacter Google Sheet.',
+      'error'
+    );
+
+    showMessage(
+      '❌ Impossible de contacter Google Sheet.\n' +
+      'Vérifiez le déploiement Apps Script.',
+      'error'
+    );
+
+    return false;
+
+  }
+
 }
 
-/* =========================================================
-   CHECK SN
-========================================================= */
-async function checkSN(snValue){
-try{
-showScanStatus('🔎 Vérification du SN...','info');
 
-const result=await jsonp({
-action:'check',
-sn:snValue
-});
+/**********************************************************
+ * ENREGISTRER
+ **********************************************************/
 
-if(!result.success){
-showScanStatus('❌ '+(result.message||'Erreur de vérification.'),'error');
-return false;
-}
+saveButton.addEventListener(
+  'click',
+  async function() {
 
-if(result.exists){
-showScanStatus(
-'❌ SN DÉJÀ SCANNÉ — REPÈRE : '+(result.repere||'inconnu'),
-'error'
+
+    const nom =
+      intervenant.value.trim();
+
+    const repereValue =
+      repere.value.trim().toUpperCase();
+
+    const snValue =
+      sn.value.trim();
+
+
+    // ----------------------------------------------------
+    // INTERVENANT
+    // ----------------------------------------------------
+
+    if (!nom) {
+
+      showMessage(
+        '⚠️ Veuillez saisir le nom de l’intervenant.',
+        'error'
+      );
+
+      intervenant.focus();
+
+      return;
+
+    }
+
+
+    // ----------------------------------------------------
+    // REPERE
+    // ----------------------------------------------------
+
+    if (!isValidRepere(repereValue)) {
+
+      showMessage(
+        '❌ REPÈRE PAS CORRECT.\n' +
+        'ÉCRIRE COMME ÇA : CBX-SX-XX',
+        'error'
+      );
+
+      repere.focus();
+
+      return;
+
+    }
+
+
+    // ----------------------------------------------------
+    // SN
+    // ----------------------------------------------------
+
+    if (!snValue) {
+
+      showMessage(
+        '⚠️ Veuillez scanner ou saisir le SN.',
+        'error'
+      );
+
+      sn.focus();
+
+      return;
+
+    }
+
+
+    saveButton.disabled =
+      true;
+
+
+    try {
+
+
+      // --------------------------------------------------
+      // 1. VERIFIER D'ABORD
+      // --------------------------------------------------
+
+      const available =
+        await checkSN(
+          snValue
+        );
+
+
+      if (!available) {
+
+        saveButton.disabled =
+          false;
+
+        return;
+
+      }
+
+
+      // --------------------------------------------------
+      // 2. ENREGISTRER
+      // --------------------------------------------------
+
+      showMessage(
+        '⏳ Enregistrement dans Google Sheet...',
+        'info'
+      );
+
+
+      const result =
+        await jsonp({
+
+          action: 'save',
+
+          intervenant: nom,
+
+          repere: repereValue,
+
+          sn: snValue,
+
+          typeScan: 'CAMERA'
+
+        });
+
+
+      // --------------------------------------------------
+      // SN DUPLIQUE
+      // --------------------------------------------------
+
+      if (
+        result.code ===
+        'DUPLICATE_SN'
+      ) {
+
+        showMessage(
+          '❌ SN DÉJÀ SCANNÉ\n' +
+          'Repère : ' +
+          (result.repere || 'inconnu'),
+          'error'
+        );
+
+        showScanStatus(
+          '❌ SN DÉJÀ SCANNÉ',
+          'error'
+        );
+
+        return;
+
+      }
+
+
+      // --------------------------------------------------
+      // ERREUR
+      // --------------------------------------------------
+
+      if (!result.success) {
+
+        showMessage(
+          '❌ ' +
+          (
+            result.message ||
+            'Erreur pendant l’enregistrement.'
+          ),
+          'error'
+        );
+
+        return;
+
+      }
+
+
+      // --------------------------------------------------
+      // OK
+      // --------------------------------------------------
+
+      showMessage(
+        '✅ SN ENREGISTRÉ AVEC SUCCÈS\n' +
+        'Repère : ' +
+        result.repere,
+        'success'
+      );
+
+
+      showScanStatus(
+        '✅ Enregistré dans Google Sheet',
+        'success'
+      );
+
+
+      // Vider uniquement le SN
+      sn.value = '';
+
+
+    } catch (error) {
+
+      console.error(error);
+
+      showMessage(
+        '❌ Impossible de contacter Google Sheet.\n' +
+        error.message,
+        'error'
+      );
+
+    } finally {
+
+      saveButton.disabled =
+        false;
+
+    }
+
+  }
 );
-showMessage(
-'❌ SN DÉJÀ SCANNÉ\nRepère : '+(result.repere||'inconnu'),
-'error'
-);
-return false;
-}
 
-showScanStatus('✅ SN DISPONIBLE','success');
-return true;
 
-}catch(error){
-console.error(error);
-showScanStatus('❌ Impossible de contacter Google Sheet.','error');
-showMessage(
-'❌ Impossible de contacter Google Sheet.\nVérifiez le déploiement Apps Script.',
-'error'
-);
-return false;
-}
-}
+/**********************************************************
+ * NOUVEAU SCAN
+ **********************************************************/
 
-/* =========================================================
-   CAMERA — CHOIX VISIBLE EN PERMANENCE
-========================================================= */
+newButton.addEventListener(
+  'click',
+  function() {
 
-/*
-   Demande la permission puis récupère les caméras.
-   On ne force jamais 0.5× : si Android/Chrome l'expose,
-   elle sera dans la liste.
-*/
-async function loadCameras(){
-try{
-if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
-throw new Error('Caméra non supportée');
-}
+    sn.value = '';
 
-/* Permission utilisateur */
-const tempStream=await navigator.mediaDevices.getUserMedia({
-video:{facingMode:{ideal:'environment'}},
-audio:false
-});
-tempStream.getTracks().forEach(track=>track.stop());
+    showScanStatus(
+      '',
+      ''
+    );
 
-/* Après permission, les labels deviennent disponibles */
-const devices=await navigator.mediaDevices.enumerateDevices();
-const cameras=devices.filter(d=>d.kind==='videoinput');
+    scanStatus.style.display =
+      'none';
 
-cameraSelect.innerHTML='';
+    message.className =
+      'message';
 
-const defaultOption=document.createElement('option');
-defaultOption.value='';
-defaultOption.textContent='📱 Caméra arrière par défaut';
-cameraSelect.appendChild(defaultOption);
+    message.textContent =
+      '';
 
-cameras.forEach(function(camera,index){
-const option=document.createElement('option');
-option.value=camera.deviceId;
+    sn.focus();
 
-let label=camera.label||('Caméra '+(index+1));
-
-if(/ultra|wide|0\.5|0,5/i.test(label)){
-label='🔭 '+label;
-}else if(/back|rear|environment|arrière/i.test(label)){
-label='📷 '+label;
-}else{
-label='📷 '+label;
-}
-
-option.textContent=label;
-cameraSelect.appendChild(option);
-});
-
-if(cameras.length){
-showScanStatus(cameras.length+' caméra(s) détectée(s).','info');
-}
-
-}catch(error){
-console.error('CAMERA LIST ERROR:',error);
-showMessage(
-'❌ Impossible d’accéder aux caméras.\nAutorisez la caméra dans Chrome.',
-'error'
-);
-}
-}
-
-/*
-   Ouvre le scanner.
-   Si une caméra est choisie => deviceId exact.
-   Sinon => caméra arrière du navigateur.
-*/
-async function startCamera(){
-if(cameraBusy)return;
-cameraBusy=true;
-
-try{
-await stopCamera();
-
-if(typeof Html5Qrcode==='undefined'){
-throw new Error('La librairie html5-qrcode n’est pas chargée.');
-}
-
-cameraBox.style.display='block';
-
-html5QrCode=new Html5Qrcode('reader');
-
-const selectedId=cameraSelect.value;
-
-const cameraConfig=selectedId
-?{deviceId:{exact:selectedId}}
-:{facingMode:{ideal:'environment'}};
-
-const config={
-fps:10,
-qrbox:function(viewfinderWidth,viewfinderHeight){
-const size=Math.floor(
-Math.min(viewfinderWidth*0.90,viewfinderHeight*0.70)
-);
-return{width:size,height:size};
-},
-aspectRatio:1.0,
-formatsToSupport:[
-Html5QrcodeSupportedFormats.QR_CODE,
-Html5QrcodeSupportedFormats.CODE_128,
-Html5QrcodeSupportedFormats.CODE_39,
-Html5QrcodeSupportedFormats.CODE_93,
-Html5QrcodeSupportedFormats.EAN_13,
-Html5QrcodeSupportedFormats.EAN_8,
-Html5QrcodeSupportedFormats.UPC_A,
-Html5QrcodeSupportedFormats.UPC_E,
-Html5QrcodeSupportedFormats.ITF,
-Html5QrcodeSupportedFormats.CODABAR
-]
-};
-
-await html5QrCode.start(
-cameraConfig,
-config,
-async function(decodedText){
-if(!decodedText)return;
-
-/* éviter plusieurs détections successives */
-if(!cameraRunning)return;
-
-cameraRunning=false;
-
-sn.value=String(decodedText).trim();
-
-showScanStatus(
-'✅ Code détecté : '+decodedText,
-'success'
+  }
 );
 
-/* Arrêt propre après détection */
-await stopCamera();
 
-cameraButton.disabled=false;
+/**********************************************************
+ * CAMERA
+ **********************************************************/
 
-/* Vérification immédiate */
-if(sn.value){
-await checkSN(sn.value);
-}
-},
-function(){ /* erreurs normales de recherche ignorées */ }
+cameraButton.addEventListener(
+  'click',
+  async function() {
+
+    if (cameraRunning) {
+      return;
+    }
+
+    cameraBox.style.display =
+      'block';
+
+    cameraButton.disabled =
+      true;
+
+
+    try {
+
+      html5QrCode =
+        new Html5Qrcode(
+          'reader'
+        );
+
+
+      const config = {
+
+        fps: 10,
+
+        qrbox: function(
+          viewfinderWidth,
+          viewfinderHeight
+        ) {
+
+          const size =
+  Math.min(
+    viewfinderWidth * 0.95,
+    viewfinderHeight * 0.80
+  );
+
+          return {
+            width: Math.floor(size),
+            height: Math.floor(size)
+          };
+
+        },
+
+        aspectRatio:
+          1.0,
+
+        formatsToSupport: [
+
+          Html5QrcodeSupportedFormats.QR_CODE,
+
+          Html5QrcodeSupportedFormats.CODE_128,
+
+          Html5QrcodeSupportedFormats.CODE_39,
+
+          Html5QrcodeSupportedFormats.CODE_93,
+
+          Html5QrcodeSupportedFormats.EAN_13,
+
+          Html5QrcodeSupportedFormats.EAN_8,
+
+          Html5QrcodeSupportedFormats.UPC_A,
+
+          Html5QrcodeSupportedFormats.UPC_E,
+
+          Html5QrcodeSupportedFormats.ITF,
+
+          Html5QrcodeSupportedFormats.CODABAR
+
+        ]
+
+      };
+
+
+      await html5QrCode.start(
+
+        {
+          facingMode: 'environment'
+        },
+
+        config,
+
+        function(decodedText) {
+
+          if (!decodedText) {
+            return;
+          }
+
+
+          sn.value =
+            decodedText.trim();
+
+
+          showScanStatus(
+            '✅ Code détecté : ' +
+            decodedText,
+            'success'
+          );
+
+
+          stopCamera();
+
+        },
+
+        function(errorMessage) {
+
+          // Ignorer les erreurs normales
+          // pendant la recherche du code.
+
+        }
+
+      );
+
+
+      cameraRunning =
+        true;
+
+
+    } catch (error) {
+
+      console.error(error);
+
+      cameraBox.style.display =
+        'none';
+
+      cameraButton.disabled =
+        false;
+
+      showMessage(
+        '❌ Impossible d’ouvrir la caméra.\n' +
+        'Autorisez la caméra dans Chrome.',
+        'error'
+      );
+
+    }
+
+  }
 );
 
-cameraRunning=true;
-cameraButton.disabled=true;
-showScanStatus('🔍 Scanner actif — placez le code dans le cadre.','success');
 
-}catch(error){
-console.error('CAMERA ERROR:',error);
+/**********************************************************
+ * ARRETER CAMERA
+ **********************************************************/
 
-cameraRunning=false;
+async function stopCamera() {
 
-try{
-if(html5QrCode)await html5QrCode.clear();
-}catch(e){}
+  if (
+    !html5QrCode ||
+    !cameraRunning
+  ) {
 
-html5QrCode=null;
-cameraBox.style.display='none';
-cameraButton.disabled=false;
+    cameraBox.style.display =
+      'none';
 
-showMessage(
-'❌ Impossible d’ouvrir la caméra.\nAutorisez la caméra dans Chrome.',
-'error'
+    cameraButton.disabled =
+      false;
+
+    return;
+
+  }
+
+
+  try {
+
+    await html5QrCode.stop();
+
+  } catch (error) {
+
+    console.log(error);
+
+  }
+
+
+  try {
+
+    await html5QrCode.clear();
+
+  } catch (error) {
+
+    console.log(error);
+
+  }
+
+
+  html5QrCode =
+    null;
+
+  cameraRunning =
+    false;
+
+  cameraBox.style.display =
+    'none';
+
+  cameraButton.disabled =
+    false;
+
+}
+
+
+/**********************************************************
+ * BOUTON FERMER CAMERA
+ **********************************************************/
+
+closeCameraButton.addEventListener(
+  'click',
+  function() {
+
+    stopCamera();
+
+  }
 );
 
-}finally{
-cameraBusy=false;
-}
-}
 
-/* Changer de caméra */
-cameraSelect.addEventListener('change',async function(){
-if(!cameraRunning)return;
+/**********************************************************
+ * TEST API AU CHARGEMENT
+ **********************************************************/
 
-await stopCamera();
+window.addEventListener(
+  'load',
+  async function() {
 
-/* petite pause Android Chrome */
-await new Promise(resolve=>setTimeout(resolve,300));
+    try {
 
-await startCamera();
-});
+      const result =
+        await jsonp({
 
-/* Bouton ouvrir */
-cameraButton.addEventListener('click',async function(){
-if(cameraRunning)return;
+          action: 'test'
 
-await loadCameras();
-await startCamera();
-});
+        });
 
-/* Arrêter caméra proprement */
-async function stopCamera(){
-cameraRunning=false;
 
-if(html5QrCode){
-try{
-await html5QrCode.stop();
-}catch(e){
-console.log('Scanner stop:',e);
-}
+      if (
+        result &&
+        result.success
+      ) {
 
-try{
-await html5QrCode.clear();
-}catch(e){
-console.log('Scanner clear:',e);
-}
+        console.log(
+          'Google Apps Script OK'
+        );
 
-html5QrCode=null;
-}
+      } else {
 
-cameraBox.style.display='none';
-cameraButton.disabled=false;
-}
+        console.error(
+          'API non disponible'
+        );
 
-/* Fermer */
-closeCameraButton.addEventListener('click',async function(){
-await stopCamera();
-showScanStatus('','');
-scanStatus.style.display='none';
-});
+      }
 
-/* =========================================================
-   ENREGISTRER
-========================================================= */
-saveButton.addEventListener('click',async function(){
-const nom=intervenant.value.trim();
-const repereValue=repere.value.trim().toUpperCase();
-const snValue=sn.value.trim();
+    } catch (error) {
 
-if(!nom){
-showMessage('⚠️ Veuillez saisir le nom de l’intervenant.','error');
-intervenant.focus();
-return;
-}
+      console.error(
+        'API TEST ERROR:',
+        error
+      );
 
-if(!isValidRepere(repereValue)){
-showMessage('❌ REPÈRE PAS CORRECT.\nÉCRIRE COMME ÇA : CBX-SX-XX','error');
-repere.focus();
-return;
-}
+    }
 
-if(!snValue){
-showMessage('⚠️ Veuillez scanner ou saisir le SN.','error');
-sn.focus();
-return;
-}
-
-saveButton.disabled=true;
-
-try{
-const available=await checkSN(snValue);
-
-if(!available){
-saveButton.disabled=false;
-return;
-}
-
-showMessage('⏳ Enregistrement dans Google Sheet...','info');
-
-const result=await jsonp({
-action:'save',
-intervenant:nom,
-repere:repereValue,
-sn:snValue,
-typeScan:'CAMERA'
-});
-
-if(result.code==='DUPLICATE_SN'){
-showMessage(
-'❌ SN DÉJÀ SCANNÉ\nRepère : '+(result.repere||'inconnu'),
-'error'
-);
-showScanStatus('❌ SN DÉJÀ SCANNÉ','error');
-return;
-}
-
-if(!result.success){
-showMessage('❌ '+(result.message||'Erreur pendant l’enregistrement.'),'error');
-return;
-}
-
-showMessage(
-'✅ SN ENREGISTRÉ AVEC SUCCÈS\nRepère : '+result.repere,
-'success'
+  }
 );
 
-showScanStatus('✅ Enregistré dans Google Sheet','success');
-sn.value='';
-
-}catch(error){
-console.error(error);
-showMessage(
-'❌ Impossible de contacter Google Sheet.\n'+error.message,
-'error'
-);
-}finally{
-saveButton.disabled=false;
-}
-});
-
-/* =========================================================
-   NOUVEAU SCAN
-========================================================= */
-newButton.addEventListener('click',function(){
-sn.value='';
-scanStatus.style.display='none';
-message.className='message';
-message.textContent='';
-sn.focus();
-});
-
-/* =========================================================
-   TEST API
-========================================================= */
-window.addEventListener('load',async function(){
-try{
-const result=await jsonp({action:'test'});
-if(result&&result.success){
-console.log('Google Apps Script OK');
-}else{
-console.error('API non disponible');
-}
-}catch(error){
-console.error('API TEST ERROR:',error);
-}
-});
-
-/* Rafraîchir les caméras si Android signale un changement */
-if(navigator.mediaDevices){
-navigator.mediaDevices.addEventListener?.('devicechange',function(){
-if(!cameraRunning){
-loadCameras().catch(()=>{});
-}
-});
-}
 </script>
+
 </body>
+
 </html>
