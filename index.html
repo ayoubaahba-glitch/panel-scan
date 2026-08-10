@@ -310,40 +310,162 @@ button:disabled {
 }
 
 
-/* CAMERA */
 
-#cameraBox {
+/* CAMERA — CHOIX PERMANENT UNIQUEMENT */
 
-  display: none;
+let cameraStream = null;
+let scanner = null;
+let cameras = [];
+let selectedCameraId = null;
+let cameraOpening = false;
 
-  margin-top: 15px;
+const cameraSelect = document.getElementById("cameraSelect");
+const openCameraBtn = document.getElementById("openCameraBtn");
+const video = document.getElementById("video");
+const videoWrapper = document.getElementById("videoWrapper");
+const cameraInfo = document.getElementById("cameraInfo");
 
+/* Demande permission puis récupère les caméras */
+async function loadCameraChoices() {
+  try {
+    if (!navigator.mediaDevices?.getUserMedia) {
+      throw new Error("Caméra non supportée par ce navigateur.");
+    }
+
+    const temp = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { ideal: "environment" } },
+      audio: false
+    });
+
+    temp.getTracks().forEach(t => t.stop());
+
+    const devices = await navigator.mediaDevices.enumerateDevices();
+
+    cameras = devices.filter(d => d.kind === "videoinput");
+
+    cameraSelect.innerHTML = "";
+
+    const browserOption = document.createElement("option");
+    browserOption.value = "";
+    browserOption.textContent = "📱 Caméra arrière (navigateur)";
+    cameraSelect.appendChild(browserOption);
+
+    cameras.forEach((device, i) => {
+      const option = document.createElement("option");
+      option.value = device.deviceId;
+
+      let label = device.label || `Caméra ${i + 1}`;
+
+      if (/ultra|wide|0\.5|0,5/i.test(label)) {
+        label = "🔭 " + label;
+      } else if (/back|rear|environment|arrière/i.test(label)) {
+        label = "📷 " + label;
+      } else {
+        label = "📷 " + label;
+      }
+
+      option.textContent = label;
+      cameraSelect.appendChild(option);
+    });
+
+    cameraInfo.textContent =
+      cameras.length
+        ? `${cameras.length} caméra(s) détectée(s) — choisissez celle que vous voulez.`
+        : "Caméra arrière du navigateur";
+
+  } catch (err) {
+    console.error(err);
+    cameraInfo.textContent =
+      "❌ Autorisez la caméra dans Chrome puis réessayez.";
+  }
 }
 
-#reader {
+/* Arrêt propre avant tout changement */
+async function stopCameraOnly() {
+  if (scanner) {
+    try {
+      if (typeof scanner.stop === "function") await scanner.stop();
+    } catch (_) {}
+    try {
+      if (typeof scanner.clear === "function") scanner.clear();
+    } catch (_) {}
+    scanner = null;
+  }
 
-  width: 100%;
+  if (cameraStream) {
+    cameraStream.getTracks().forEach(t => {
+      try { t.stop(); } catch (_) {}
+    });
+    cameraStream = null;
+  }
 
-  overflow: hidden;
-
-  border-radius: 20px;
-
-  background: #000;
-
+  if (video) {
+    try { video.pause(); } catch (_) {}
+    video.srcObject = null;
+  }
 }
 
-.camera-info {
+/* Ouvre la caméra choisie */
+async function openSelectedCamera(deviceId = "") {
+  if (cameraOpening) return;
+  cameraOpening = true;
 
-  text-align: center;
+  try {
+    await stopCameraOnly();
 
-  font-size: 16px;
+    const constraints = deviceId
+      ? { video: { deviceId: { exact: deviceId } }, audio: false }
+      : { video: { facingMode: { ideal: "environment" } }, audio: false };
 
-  color: #6b7280;
+    cameraStream = await navigator.mediaDevices.getUserMedia(constraints);
 
-  margin-top: 8px;
+    if (video) {
+      video.srcObject = cameraStream;
+      video.setAttribute("playsinline", "true");
+      video.muted = true;
+      await video.play();
+    }
 
+    videoWrapper.style.display = "block";
+    selectedCameraId = deviceId || null;
+
+    /* Le scanner existant est utilisé sans changer le reste de l'application. */
+    if (typeof startScannerWithVideo === "function") {
+      await startScannerWithVideo();
+    } else if (typeof startScanner === "function") {
+      await startScanner();
+    }
+
+  } catch (err) {
+    console.error("Camera error:", err);
+
+    if (typeof showCameraError === "function") {
+      showCameraError(err);
+    } else {
+      cameraInfo.textContent =
+        "❌ Impossible d'ouvrir cette caméra.";
+    }
+  } finally {
+    cameraOpening = false;
+  }
 }
 
+/* Le choix reste visible et permet de changer à tout moment */
+cameraSelect.addEventListener("change", async () => {
+  await openSelectedCamera(cameraSelect.value);
+});
+
+openCameraBtn.addEventListener("click", async () => {
+  await loadCameraChoices();
+  await openSelectedCamera(cameraSelect.value);
+});
+
+/* Si le navigateur révèle les labels après permission, actualiser la liste. */
+navigator.mediaDevices?.addEventListener?.("devicechange", async () => {
+  try {
+    await loadCameraChoices();
+  } catch (_) {}
+});
 
 /* MOBILE */
 
@@ -471,8 +593,18 @@ button:disabled {
     📷 OUVRIR LA CAMÉRA
   </button>
 
-  <div class="camera-info">
-    Compatible QR Code et plusieurs formats de codes-barres.
+  <div style="margin-top:14px;">
+    <label for="cameraSelect" style="font-size:18px;">
+      📷 CHOISIR LA CAMÉRA
+    </label>
+
+    <select id="cameraSelect" disabled>
+      <option value="">Caméra du navigateur — arrière</option>
+    </select>
+  </div>
+
+  <div id="cameraInfo" class="camera-info">
+    Le navigateur utilise par défaut la caméra arrière. Les autres caméras apparaîtront après autorisation.
   </div>
 
   <div id="cameraBox">
@@ -1221,160 +1353,417 @@ newButton.addEventListener(
 
 
 /**********************************************************
- * CAMERA
+ * CAMERA + SCANNER
+ *
+ * Seule cette partie est modifiée.
+ * Google Sheets / JSONP / SN / Repère restent inchangés.
  **********************************************************/
 
-cameraButton.addEventListener(
-  'click',
-  async function() {
+const cameraSelect =
+  document.getElementById('cameraSelect');
 
-    if (cameraRunning) {
-      return;
+const cameraInfo =
+  document.getElementById('cameraInfo');
+
+let html5QrCode = null;
+let cameraRunning = false;
+let cameraChanging = false;
+let availableCameras = [];
+
+
+/* ---------------------------------------------------------
+ * Configuration du scanner
+ * --------------------------------------------------------- */
+function getScannerConfig() {
+
+  return {
+    fps: 12,
+
+    qrbox: function(viewfinderWidth, viewfinderHeight) {
+
+      const width =
+        Math.floor(viewfinderWidth * 0.92);
+
+      const height =
+        Math.floor(viewfinderHeight * 0.55);
+
+      return {
+        width: width,
+        height: height
+      };
+    },
+
+    aspectRatio: 1.0,
+
+    formatsToSupport: [
+      Html5QrcodeSupportedFormats.QR_CODE,
+      Html5QrcodeSupportedFormats.CODE_128,
+      Html5QrcodeSupportedFormats.CODE_39,
+      Html5QrcodeSupportedFormats.CODE_93,
+      Html5QrcodeSupportedFormats.EAN_13,
+      Html5QrcodeSupportedFormats.EAN_8,
+      Html5QrcodeSupportedFormats.UPC_A,
+      Html5QrcodeSupportedFormats.UPC_E,
+      Html5QrcodeSupportedFormats.ITF,
+      Html5QrcodeSupportedFormats.CODABAR
+    ]
+  };
+}
+
+
+/* ---------------------------------------------------------
+ * Détecter les caméras
+ * --------------------------------------------------------- */
+async function loadCameras() {
+
+  try {
+
+    availableCameras =
+      await Html5Qrcode.getCameras();
+
+    cameraSelect.innerHTML = '';
+
+    if (!availableCameras.length) {
+
+      const option =
+        document.createElement('option');
+
+      option.value = '';
+      option.textContent =
+        '❌ Aucune caméra détectée';
+
+      cameraSelect.appendChild(option);
+      cameraSelect.disabled = true;
+
+      return [];
     }
+
+
+    availableCameras.forEach(function(camera, index) {
+
+      const option =
+        document.createElement('option');
+
+      option.value =
+        camera.id;
+
+      option.textContent =
+        camera.label ||
+        ('Caméra ' + (index + 1));
+
+      cameraSelect.appendChild(option);
+    });
+
+
+    /*
+     * On privilégie une caméra arrière.
+     * Une caméra 0.5x/ultra-wide reste visible
+     * si Android/Chrome l'expose comme caméra.
+     */
+    const rear =
+      availableCameras.find(function(camera) {
+
+        const label =
+          String(camera.label || '').toLowerCase();
+
+        return (
+          label.includes('back') ||
+          label.includes('rear') ||
+          label.includes('arrière') ||
+          label.includes('environment')
+        );
+      });
+
+
+    if (rear) {
+      cameraSelect.value = rear.id;
+    } else {
+      cameraSelect.value =
+        availableCameras[0].id;
+    }
+
+
+    cameraSelect.disabled = false;
+
+    cameraInfo.textContent =
+      availableCameras.length +
+      ' caméra(s) détectée(s). ' +
+      'La caméra arrière est sélectionnée par défaut.';
+
+
+    return availableCameras;
+
+  } catch (error) {
+
+    console.error(
+      'Erreur détection caméras:',
+      error
+    );
+
+    cameraInfo.textContent =
+      '❌ Impossible de détecter les caméras. ' +
+      'Autorisez la caméra dans Chrome.';
+
+    cameraSelect.disabled = true;
+
+    return [];
+  }
+}
+
+
+/* ---------------------------------------------------------
+ * Ouvrir caméra
+ * --------------------------------------------------------- */
+cameraButton.addEventListener('click', async function() {
+
+  if (cameraChanging) {
+    return;
+  }
+
+  cameraChanging = true;
+  cameraButton.disabled = true;
+
+  try {
+
+    /*
+     * Toujours arrêter complètement l'ancien scanner.
+     * Cela évite "already under transition".
+     */
+    await stopCamera();
+
+    cameraBox.style.display = 'block';
+
+
+    /*
+     * Première ouverture : on laisse le navigateur
+     * choisir la caméra arrière.
+     */
+    html5QrCode =
+      new Html5Qrcode('reader');
+
+    try {
+
+      await html5QrCode.start(
+        {
+          facingMode: {
+            ideal: 'environment'
+          }
+        },
+        getScannerConfig(),
+        onScanSuccess,
+        function() {}
+      );
+
+      cameraRunning = true;
+
+    } catch (firstError) {
+
+      console.warn(
+        'Ouverture caméra arrière échouée:',
+        firstError
+      );
+
+      await stopCamera();
+
+      const cameras =
+        await loadCameras();
+
+      if (!cameras.length) {
+        throw firstError;
+      }
+
+      html5QrCode =
+        new Html5Qrcode('reader');
+
+      await html5QrCode.start(
+        cameraSelect.value || cameras[0].id,
+        getScannerConfig(),
+        onScanSuccess,
+        function() {}
+      );
+
+      cameraRunning = true;
+    }
+
+
+    /*
+     * Après autorisation, Android/Chrome permet
+     * d'obtenir les noms et toutes les caméras.
+     */
+    await loadCameras();
+
+    cameraInfo.textContent =
+      '📷 Caméra active. ' +
+      'Vous pouvez changer de caméra à tout moment.';
+
+
+  } catch (error) {
+
+    console.error(
+      'Erreur caméra:',
+      error
+    );
+
+    await stopCamera();
+
+    cameraBox.style.display =
+      'none';
+
+    showMessage(
+      '❌ Impossible d’ouvrir la caméra.\n' +
+      'Autorisez la caméra dans Chrome puis réessayez.',
+      'error'
+    );
+
+  } finally {
+
+    cameraChanging = false;
+    cameraButton.disabled = false;
+  }
+
+});
+
+
+/* ---------------------------------------------------------
+ * Changer de caméra
+ * --------------------------------------------------------- */
+cameraSelect.addEventListener('change', async function() {
+
+  const deviceId =
+    this.value;
+
+  if (!deviceId || cameraChanging) {
+    return;
+  }
+
+  /*
+   * Si la caméra n'est pas encore ouverte,
+   * on garde simplement le choix.
+   */
+  if (!cameraRunning) {
+
+    cameraInfo.textContent =
+      '📷 Caméra sélectionnée. ' +
+      'Appuyez sur OUVRIR LA CAMÉRA.';
+
+    return;
+  }
+
+
+  cameraChanging = true;
+  cameraSelect.disabled = true;
+
+  try {
+
+    /*
+     * STOP avant START.
+     */
+    await stopCamera();
 
     cameraBox.style.display =
       'block';
 
-    cameraButton.disabled =
-      true;
+    html5QrCode =
+      new Html5Qrcode('reader');
+
+    await html5QrCode.start(
+      deviceId,
+      getScannerConfig(),
+      onScanSuccess,
+      function() {}
+    );
+
+    cameraRunning = true;
 
 
-    try {
-
-      html5QrCode =
-        new Html5Qrcode(
-          'reader'
-        );
+    const selected =
+      availableCameras.find(function(camera) {
+        return camera.id === deviceId;
+      });
 
 
-      const config = {
+    cameraInfo.textContent =
+      '📷 ' +
+      (
+        selected && selected.label
+          ? selected.label
+          : 'Caméra sélectionnée'
+      );
 
-        fps: 10,
 
-        qrbox: function(
-          viewfinderWidth,
-          viewfinderHeight
-        ) {
+  } catch (error) {
 
-          const size =
-  Math.min(
-    viewfinderWidth * 0.95,
-    viewfinderHeight * 0.80
+    console.error(
+      'Erreur changement caméra:',
+      error
+    );
+
+    await stopCamera();
+
+    showMessage(
+      '❌ Impossible de changer de caméra.',
+      'error'
+    );
+
+  } finally {
+
+    cameraChanging = false;
+    cameraSelect.disabled = false;
+  }
+
+});
+
+
+/* ---------------------------------------------------------
+ * Code détecté
+ * --------------------------------------------------------- */
+function onScanSuccess(decodedText) {
+
+  if (!decodedText || !cameraRunning) {
+    return;
+  }
+
+  const value =
+    String(decodedText).trim();
+
+  if (!value) {
+    return;
+  }
+
+
+  sn.value =
+    value;
+
+
+  showScanStatus(
+    '✅ Code détecté : ' + value,
+    'success'
   );
 
-          return {
-            width: Math.floor(size),
-            height: Math.floor(size)
-          };
 
-        },
-
-        aspectRatio:
-          1.0,
-
-        formatsToSupport: [
-
-          Html5QrcodeSupportedFormats.QR_CODE,
-
-          Html5QrcodeSupportedFormats.CODE_128,
-
-          Html5QrcodeSupportedFormats.CODE_39,
-
-          Html5QrcodeSupportedFormats.CODE_93,
-
-          Html5QrcodeSupportedFormats.EAN_13,
-
-          Html5QrcodeSupportedFormats.EAN_8,
-
-          Html5QrcodeSupportedFormats.UPC_A,
-
-          Html5QrcodeSupportedFormats.UPC_E,
-
-          Html5QrcodeSupportedFormats.ITF,
-
-          Html5QrcodeSupportedFormats.CODABAR
-
-        ]
-
-      };
+  /*
+   * Arrêt avant vérification pour éviter
+   * les doubles lectures.
+   */
+  stopCamera();
 
 
-      await html5QrCode.start(
-
-        {
-          facingMode: 'environment'
-        },
-
-        config,
-
-        function(decodedText) {
-
-          if (!decodedText) {
-            return;
-          }
+  /*
+   * Utilise exactement ta fonction Google Sheets
+   * existante.
+   */
+  checkSN(value);
+}
 
 
-          sn.value =
-            decodedText.trim();
-
-
-          showScanStatus(
-            '✅ Code détecté : ' +
-            decodedText,
-            'success'
-          );
-
-
-          stopCamera();
-
-        },
-
-        function(errorMessage) {
-
-          // Ignorer les erreurs normales
-          // pendant la recherche du code.
-
-        }
-
-      );
-
-
-      cameraRunning =
-        true;
-
-
-    } catch (error) {
-
-      console.error(error);
-
-      cameraBox.style.display =
-        'none';
-
-      cameraButton.disabled =
-        false;
-
-      showMessage(
-        '❌ Impossible d’ouvrir la caméra.\n' +
-        'Autorisez la caméra dans Chrome.',
-        'error'
-      );
-
-    }
-
-  }
-);
-
-
-/**********************************************************
- * ARRETER CAMERA
- **********************************************************/
-
+/* ---------------------------------------------------------
+ * Arrêter caméra proprement
+ * --------------------------------------------------------- */
 async function stopCamera() {
 
-  if (
-    !html5QrCode ||
-    !cameraRunning
-  ) {
+  cameraRunning = false;
+
+  if (!html5QrCode) {
 
     cameraBox.style.display =
       'none';
@@ -1383,59 +1772,66 @@ async function stopCamera() {
       false;
 
     return;
+  }
 
+
+  const reader =
+    html5QrCode;
+
+  html5QrCode = null;
+
+
+  try {
+    await reader.stop();
+  } catch (error) {
+    console.log(
+      'Scanner déjà arrêté:',
+      error
+    );
   }
 
 
   try {
-
-    await html5QrCode.stop();
-
+    await reader.clear();
   } catch (error) {
-
-    console.log(error);
-
+    console.log(
+      'Clear scanner:',
+      error
+    );
   }
 
-
-  try {
-
-    await html5QrCode.clear();
-
-  } catch (error) {
-
-    console.log(error);
-
-  }
-
-
-  html5QrCode =
-    null;
-
-  cameraRunning =
-    false;
 
   cameraBox.style.display =
     'none';
 
   cameraButton.disabled =
     false;
-
 }
 
 
-/**********************************************************
- * BOUTON FERMER CAMERA
- **********************************************************/
+/* ---------------------------------------------------------
+ * Fermer caméra
+ * --------------------------------------------------------- */
+closeCameraButton.addEventListener('click', async function() {
 
-closeCameraButton.addEventListener(
-  'click',
-  function() {
-
-    stopCamera();
-
+  if (cameraChanging) {
+    return;
   }
-);
+
+  await stopCamera();
+
+  cameraInfo.textContent =
+    'Caméra arrêtée. Vous pouvez choisir une autre caméra.';
+});
+
+
+/* ---------------------------------------------------------
+ * Nettoyage page
+ * --------------------------------------------------------- */
+window.addEventListener('beforeunload', function() {
+  stopCamera();
+});
+
 
 
 /**********************************************************
