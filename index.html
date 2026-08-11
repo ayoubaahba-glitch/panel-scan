@@ -345,6 +345,114 @@ button:disabled {
 }
 
 
+/* SCAN RENFORCÉ */
+.scan-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.scan-actions button {
+  margin-top: 0;
+  min-height: 58px;
+  font-size: 18px;
+}
+
+.btn-photo {
+  background: #7c3aed;
+}
+
+.btn-ocr {
+  background: #ea580c;
+}
+
+.btn-torch {
+  background: #374151;
+}
+
+.scan-guide {
+  margin-top: 12px;
+  padding: 12px 14px;
+  border: 2px dashed #9ca3af;
+  border-radius: 14px;
+  background: #f9fafb;
+  color: #4b5563;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.45;
+  text-align: center;
+}
+
+.quality-box {
+  display: none;
+  margin-top: 12px;
+  padding: 12px;
+  border-radius: 14px;
+  text-align: center;
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.quality-good {
+  display: block;
+  background: #dcfce7;
+  color: #166534;
+}
+
+.quality-warn {
+  display: block;
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.quality-bad {
+  display: block;
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+#previewWrap {
+  display: none;
+  margin-top: 12px;
+}
+
+#previewImage {
+  width: 100%;
+  max-height: 260px;
+  object-fit: contain;
+  border-radius: 14px;
+  background: #111827;
+}
+
+#processingCanvas,
+#hiddenReader {
+  display: none !important;
+}
+
+.ocr-progress {
+  display: none;
+  margin-top: 10px;
+  height: 10px;
+  background: #e5e7eb;
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.ocr-progress > div {
+  width: 0%;
+  height: 100%;
+  background: #2563eb;
+  transition: width .2s ease;
+}
+
+@media (max-width: 520px) {
+  .scan-actions {
+    grid-template-columns: 1fr;
+  }
+}
+
+
 /* MOBILE */
 
 @media (max-width: 600px) {
@@ -458,7 +566,7 @@ button:disabled {
 
 
 <!-- =====================================================
-     CAMERA
+     CAMERA / PHOTO / OCR RENFORCÉ
 ====================================================== -->
 
 <div class="card">
@@ -472,12 +580,36 @@ button:disabled {
   </button>
 
   <div class="camera-info">
-    Compatible QR Code et plusieurs formats de codes-barres.
+    Lecture renforcée des codes-barres + OCR du numéro de série.
+    Fonctionne aussi si l’étiquette est légèrement inclinée.
+  </div>
+
+  <div class="scan-guide">
+    Placez toute l’étiquette dans le cadre, surtout le code-barres et la ligne SN.<br>
+    Si le code-barres ne passe pas : utilisez <b>LECTURE RENFORCÉE / OCR</b>.
   </div>
 
   <div id="cameraBox">
 
     <div id="reader"></div>
+
+    <div class="scan-actions">
+      <button
+        id="enhancedReadButton"
+        class="btn-ocr"
+        type="button"
+      >
+        ✨ LECTURE RENFORCÉE / OCR
+      </button>
+
+      <button
+        id="torchButton"
+        class="btn-torch"
+        type="button"
+      >
+        🔦 FLASH
+      </button>
+    </div>
 
     <button
       id="closeCameraButton"
@@ -488,6 +620,35 @@ button:disabled {
     </button>
 
   </div>
+
+  <button
+    id="photoButton"
+    class="btn-photo"
+    type="button"
+  >
+    🖼️ SCANNER DEPUIS UNE PHOTO
+  </button>
+
+  <input
+    id="photoInput"
+    type="file"
+    accept="image/*"
+    capture="environment"
+    hidden
+  >
+
+  <div id="qualityBox" class="quality-box"></div>
+
+  <div id="ocrProgress" class="ocr-progress">
+    <div id="ocrProgressBar"></div>
+  </div>
+
+  <div id="previewWrap">
+    <img id="previewImage" alt="Aperçu de la photo à analyser">
+  </div>
+
+  <canvas id="processingCanvas"></canvas>
+  <div id="hiddenReader"></div>
 
 </div>
 
@@ -550,6 +711,8 @@ button:disabled {
 ====================================================== -->
 
 <script src="https://unpkg.com/html5-qrcode"></script>
+<script src="https://cdn.jsdelivr.net/npm/@ericblade/quagga2@1.12.1/dist/quagga.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 
 
 <script>
@@ -603,6 +766,37 @@ const scanStatus =
   document.getElementById('scanStatus');
 
 
+const enhancedReadButton =
+  document.getElementById('enhancedReadButton');
+
+const torchButton =
+  document.getElementById('torchButton');
+
+const photoButton =
+  document.getElementById('photoButton');
+
+const photoInput =
+  document.getElementById('photoInput');
+
+const qualityBox =
+  document.getElementById('qualityBox');
+
+const previewWrap =
+  document.getElementById('previewWrap');
+
+const previewImage =
+  document.getElementById('previewImage');
+
+const processingCanvas =
+  document.getElementById('processingCanvas');
+
+const ocrProgress =
+  document.getElementById('ocrProgress');
+
+const ocrProgressBar =
+  document.getElementById('ocrProgressBar');
+
+
 /**********************************************************
  * VARIABLES
  **********************************************************/
@@ -612,6 +806,13 @@ let html5QrCode = null;
 let cameraRunning = false;
 
 let requestCounter = 0;
+
+
+let enhancedBusy = false;
+let torchOn = false;
+let autoEnhancedTimer = null;
+let lastScanMethod = 'SAISIE_MANUELLE';
+let programmaticSnChange = false;
 
 
 /**********************************************************
@@ -745,6 +946,102 @@ function showScanStatus(
 
   scanStatus.className =
     'status ' + type;
+
+}
+
+
+
+/**********************************************************
+ * SN - AFFECTATION / MODE DE LECTURE
+ **********************************************************/
+
+function setSnValue(value, method) {
+
+  programmaticSnChange = true;
+  sn.value = String(value || '').trim();
+  programmaticSnChange = false;
+  lastScanMethod = method || 'INCONNU';
+
+}
+
+sn.addEventListener('input', function() {
+
+  if (!programmaticSnChange) {
+    lastScanMethod = 'SAISIE_MANUELLE';
+  }
+
+});
+
+
+/**********************************************************
+ * QUALITÉ IMAGE
+ **********************************************************/
+
+function setQuality(text, level) {
+
+  qualityBox.textContent = text;
+  qualityBox.className = 'quality-box quality-' + level;
+
+}
+
+function hideQuality() {
+
+  qualityBox.textContent = '';
+  qualityBox.className = 'quality-box';
+
+}
+
+function estimateSharpness(canvas) {
+
+  const maxW = 420;
+  const ratio = Math.min(1, maxW / canvas.width);
+  const w = Math.max(40, Math.floor(canvas.width * ratio));
+  const h = Math.max(30, Math.floor(canvas.height * ratio));
+
+  const tmp = document.createElement('canvas');
+  tmp.width = w;
+  tmp.height = h;
+
+  const ctx = tmp.getContext('2d', { willReadFrequently: true });
+  ctx.drawImage(canvas, 0, 0, w, h);
+
+  const data = ctx.getImageData(0, 0, w, h).data;
+  let sum = 0;
+  let count = 0;
+
+  for (let y = 0; y < h - 1; y += 2) {
+    for (let x = 0; x < w - 1; x += 2) {
+
+      const i = (y * w + x) * 4;
+      const ir = (y * w + (x + 1)) * 4;
+      const id = ((y + 1) * w + x) * 4;
+
+      const g = (data[i] + data[i + 1] + data[i + 2]) / 3;
+      const gr = (data[ir] + data[ir + 1] + data[ir + 2]) / 3;
+      const gd = (data[id] + data[id + 1] + data[id + 2]) / 3;
+
+      sum += Math.abs(g - gr) + Math.abs(g - gd);
+      count += 2;
+    }
+  }
+
+  return count ? (sum / count) : 0;
+
+}
+
+function updateSharpnessStatus(canvas) {
+
+  const score = estimateSharpness(canvas);
+
+  if (score >= 18) {
+    setQuality('✅ Netteté correcte — analyse en cours.', 'good');
+  } else if (score >= 9) {
+    setQuality('⚠️ Photo un peu floue — tentative de correction automatique.', 'warn');
+  } else {
+    setQuality('⚠️ Photo très floue. Je tente quand même, mais rapprochez-vous si la lecture échoue.', 'bad');
+  }
+
+  return score;
 
 }
 
@@ -1096,7 +1393,7 @@ saveButton.addEventListener(
 
           sn: snValue,
 
-          typeScan: 'CAMERA'
+          typeScan: lastScanMethod
 
         });
 
@@ -1221,6 +1518,705 @@ newButton.addEventListener(
 
 
 /**********************************************************
+ * OUTILS IMAGE / SCAN RENFORCÉ
+ **********************************************************/
+
+function getLiveVideo() {
+
+  return document.querySelector('#reader video');
+
+}
+
+function captureLiveFrame() {
+
+  const video = getLiveVideo();
+
+  if (!video || !video.videoWidth || !video.videoHeight) {
+    throw new Error('Flux caméra non prêt.');
+  }
+
+  processingCanvas.width = video.videoWidth;
+  processingCanvas.height = video.videoHeight;
+
+  const ctx = processingCanvas.getContext('2d');
+  ctx.drawImage(video, 0, 0, processingCanvas.width, processingCanvas.height);
+
+  return cloneCanvas(processingCanvas);
+
+}
+
+function cloneCanvas(source) {
+
+  const c = document.createElement('canvas');
+  c.width = source.width;
+  c.height = source.height;
+  c.getContext('2d').drawImage(source, 0, 0);
+  return c;
+
+}
+
+function scaleCanvas(source, maxDimension = 2200) {
+
+  const largest = Math.max(source.width, source.height);
+  const scale = largest > maxDimension ? (maxDimension / largest) : 1;
+
+  const c = document.createElement('canvas');
+  c.width = Math.max(1, Math.round(source.width * scale));
+  c.height = Math.max(1, Math.round(source.height * scale));
+
+  const ctx = c.getContext('2d');
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(source, 0, 0, c.width, c.height);
+
+  return c;
+
+}
+
+function cropCenterBand(source, ratio = 0.64) {
+
+  const h = Math.round(source.height * ratio);
+  const y = Math.round((source.height - h) / 2);
+
+  const c = document.createElement('canvas');
+  c.width = source.width;
+  c.height = h;
+
+  c.getContext('2d').drawImage(
+    source,
+    0, y, source.width, h,
+    0, 0, source.width, h
+  );
+
+  return c;
+
+}
+
+function rotateCanvas(source, degrees) {
+
+  if (!degrees) {
+    return cloneCanvas(source);
+  }
+
+  const rad = degrees * Math.PI / 180;
+  const sin = Math.abs(Math.sin(rad));
+  const cos = Math.abs(Math.cos(rad));
+
+  const w = Math.ceil(source.width * cos + source.height * sin);
+  const h = Math.ceil(source.width * sin + source.height * cos);
+
+  const c = document.createElement('canvas');
+  c.width = w;
+  c.height = h;
+
+  const ctx = c.getContext('2d');
+  ctx.translate(w / 2, h / 2);
+  ctx.rotate(rad);
+  ctx.drawImage(source, -source.width / 2, -source.height / 2);
+
+  return c;
+
+}
+
+function enhanceCanvas(source, strong = false) {
+
+  const c = document.createElement('canvas');
+  c.width = source.width;
+  c.height = source.height;
+
+  const ctx = c.getContext('2d');
+  ctx.filter = strong
+    ? 'grayscale(1) contrast(2.05) brightness(1.08)'
+    : 'grayscale(1) contrast(1.45) brightness(1.04)';
+
+  ctx.drawImage(source, 0, 0);
+  ctx.filter = 'none';
+
+  if (strong) {
+
+    const image = ctx.getImageData(0, 0, c.width, c.height);
+    const d = image.data;
+
+    for (let i = 0; i < d.length; i += 4) {
+      const v = d[i];
+      const out = v < 145 ? Math.max(0, v - 22) : Math.min(255, v + 18);
+      d[i] = d[i + 1] = d[i + 2] = out;
+    }
+
+    ctx.putImageData(image, 0, 0);
+  }
+
+  return c;
+
+}
+
+function showPreview(canvas) {
+
+  try {
+    previewImage.src = canvas.toDataURL('image/jpeg', 0.90);
+    previewWrap.style.display = 'block';
+  } catch (e) {
+    previewWrap.style.display = 'none';
+  }
+
+}
+
+function normalizeDecodedValue(value) {
+
+  return String(value || '')
+    .trim()
+    .replace(/^['"`]+|['"`]+$/g, '')
+    .replace(/\s+/g, '');
+
+}
+
+function looksLikeSerial(value) {
+
+  const v = normalizeDecodedValue(value);
+
+  if (v.length < 5 || v.length > 80) {
+    return false;
+  }
+
+  return /^[A-Z0-9._\-\/]+$/i.test(v);
+
+}
+
+async function decodeWithNativeBarcodeDetector(canvas) {
+
+  if (!('BarcodeDetector' in window)) {
+    return null;
+  }
+
+  try {
+
+    const supported = await BarcodeDetector.getSupportedFormats();
+    const wanted = [
+      'code_128', 'code_39', 'code_93',
+      'ean_13', 'ean_8', 'upc_a', 'upc_e',
+      'itf', 'codabar', 'qr_code', 'data_matrix', 'pdf417'
+    ].filter(x => supported.includes(x));
+
+    if (!wanted.length) {
+      return null;
+    }
+
+    const detector = new BarcodeDetector({ formats: wanted });
+    const found = await detector.detect(canvas);
+
+    if (found && found.length) {
+      const value = normalizeDecodedValue(found[0].rawValue);
+      if (looksLikeSerial(value)) {
+        return value;
+      }
+    }
+
+  } catch (e) {
+    console.log('BarcodeDetector:', e);
+  }
+
+  return null;
+
+}
+
+function decodeWithQuagga(canvas) {
+
+  return new Promise(function(resolve) {
+
+    if (!window.Quagga) {
+      resolve(null);
+      return;
+    }
+
+    let src;
+
+    try {
+      src = canvas.toDataURL('image/jpeg', 0.96);
+    } catch (e) {
+      resolve(null);
+      return;
+    }
+
+    Quagga.decodeSingle({
+
+      src: src,
+      numOfWorkers: 0,
+      locate: true,
+
+      inputStream: {
+        size: Math.min(2000, Math.max(canvas.width, canvas.height))
+      },
+
+      locator: {
+        patchSize: 'x-large',
+        halfSample: false
+      },
+
+      decoder: {
+        readers: [
+          'code_128_reader',
+          'code_39_reader',
+          'code_93_reader',
+          'ean_reader',
+          'ean_8_reader',
+          'upc_reader',
+          'upc_e_reader',
+          'codabar_reader',
+          'i2of5_reader',
+          '2of5_reader'
+        ]
+      }
+
+    }, function(result) {
+
+      if (
+        result &&
+        result.codeResult &&
+        looksLikeSerial(result.codeResult.code)
+      ) {
+        resolve(normalizeDecodedValue(result.codeResult.code));
+      } else {
+        resolve(null);
+      }
+
+    });
+
+  });
+
+}
+
+async function robustBarcodeDecode(source) {
+
+  const base = scaleCanvas(source, 2200);
+  const band = cropCenterBand(base, 0.70);
+
+  const sources = [
+    band,
+    base,
+    enhanceCanvas(band, false),
+    enhanceCanvas(band, true)
+  ];
+
+  const angles = [0, -6, 6, -12, 12, -20, 20];
+
+  for (const src of sources) {
+
+    for (const angle of angles) {
+
+      const variant = rotateCanvas(src, angle);
+
+      const nativeResult = await decodeWithNativeBarcodeDetector(variant);
+      if (nativeResult) {
+        return nativeResult;
+      }
+
+      const quaggaResult = await decodeWithQuagga(variant);
+      if (quaggaResult) {
+        return quaggaResult;
+      }
+
+    }
+  }
+
+  return null;
+
+}
+
+function cleanOcrText(text) {
+
+  return String(text || '')
+    .toUpperCase()
+    .replace(/[|]/g, 'I')
+    .replace(/[“”]/g, '"')
+    .replace(/[‘’]/g, "'");
+
+}
+
+function candidateScore(value, labelBoost = false) {
+
+  const v = normalizeDecodedValue(value).toUpperCase();
+
+  if (!looksLikeSerial(v)) {
+    return -999;
+  }
+
+  let score = 0;
+
+  if (v.length >= 8 && v.length <= 32) score += 5;
+  if (/[0-9]/.test(v)) score += 4;
+  if (/[A-Z]/.test(v)) score += 2;
+  if (/[A-Z]/.test(v) && /[0-9]/.test(v)) score += 4;
+  if (/[-_/]/.test(v)) score += 1;
+  if (labelBoost) score += 12;
+
+  if (/^(SERIAL|NUMBER|MODEL|MODULE|POWER|VOLTAGE|CURRENT|WARNING|MADE|CHINA)$/i.test(v)) {
+    score -= 20;
+  }
+
+  return score;
+
+}
+
+function extractSnFromOcrText(text) {
+
+  const cleaned = cleanOcrText(text);
+  const lines = cleaned
+    .split(/\r?\n/)
+    .map(x => x.trim())
+    .filter(Boolean);
+
+  const labeledPatterns = [
+    /(?:S\s*\/\s*N|S\s*N|SERIAL\s*(?:NO|NUMBER|N°)?)\s*[:#\-]?\s*([A-Z0-9][A-Z0-9._\-/]{4,79})/i,
+    /(?:SN\.?|SER\.?\s*NO\.?)\s+([A-Z0-9][A-Z0-9._\-/]{4,79})/i
+  ];
+
+  const candidates = [];
+
+  for (const line of lines) {
+
+    for (const rx of labeledPatterns) {
+      const m = line.match(rx);
+      if (m && m[1]) {
+        candidates.push({ value: m[1], score: candidateScore(m[1], true) });
+      }
+    }
+
+    const tokens = line.match(/[A-Z0-9][A-Z0-9._\-/]{4,79}/g) || [];
+
+    for (const token of tokens) {
+      candidates.push({ value: token, score: candidateScore(token, false) });
+    }
+
+  }
+
+  candidates.sort((a, b) => b.score - a.score);
+
+  return candidates.length && candidates[0].score > 3
+    ? normalizeDecodedValue(candidates[0].value)
+    : null;
+
+}
+
+async function robustOcrDecode(source) {
+
+  if (!window.Tesseract) {
+    return null;
+  }
+
+  const base = scaleCanvas(source, 2000);
+  const band = cropCenterBand(base, 0.72);
+
+  const variants = [
+    enhanceCanvas(band, false),
+    rotateCanvas(enhanceCanvas(band, false), -8),
+    rotateCanvas(enhanceCanvas(band, false), 8),
+    rotateCanvas(enhanceCanvas(band, true), -15),
+    rotateCanvas(enhanceCanvas(band, true), 15)
+  ];
+
+  ocrProgress.style.display = 'block';
+  ocrProgressBar.style.width = '1%';
+
+  let best = null;
+  let currentIndex = 0;
+
+  const worker = await Tesseract.createWorker(
+    'eng',
+    1,
+    {
+      logger: function(m) {
+
+        if (m.status === 'recognizing text' && typeof m.progress === 'number') {
+          const basePct = (currentIndex / variants.length) * 100;
+          const spanPct = 100 / variants.length;
+          const pct = basePct + (m.progress * spanPct);
+          ocrProgressBar.style.width = Math.min(100, Math.round(pct)) + '%';
+        }
+
+      }
+    }
+  );
+
+  try {
+
+    for (let i = 0; i < variants.length; i++) {
+
+      currentIndex = i;
+
+      showScanStatus(
+        '🔤 OCR ' + (i + 1) + '/' + variants.length + ' — correction inclinaison/flou...',
+        'info'
+      );
+
+      const result = await worker.recognize(variants[i]);
+      const text = result?.data?.text || '';
+      const confidence = result?.data?.confidence || 0;
+      const candidate = extractSnFromOcrText(text);
+
+      if (candidate) {
+        const score = candidateScore(candidate, true) + (confidence / 20);
+
+        if (!best || score > best.score) {
+          best = {
+            value: candidate,
+            score: score,
+            confidence: confidence
+          };
+        }
+      }
+
+      if (best && best.confidence >= 70 && best.value.length >= 7) {
+        break;
+      }
+
+    }
+
+  } finally {
+
+    try {
+      await worker.terminate();
+    } catch (e) {
+      console.log('Tesseract terminate:', e);
+    }
+
+    ocrProgressBar.style.width = '100%';
+
+    setTimeout(function() {
+      ocrProgress.style.display = 'none';
+      ocrProgressBar.style.width = '0%';
+    }, 700);
+
+  }
+
+  return best;
+
+}
+
+
+async function processCapturedImage(sourceCanvas, sourceType) {
+
+  if (enhancedBusy) {
+    return;
+  }
+
+  enhancedBusy = true;
+  enhancedReadButton.disabled = true;
+  photoButton.disabled = true;
+
+  try {
+
+    hideQuality();
+    updateSharpnessStatus(sourceCanvas);
+    showPreview(sourceCanvas);
+
+    showScanStatus(
+      '🔎 Analyse du code-barres + correction de l’inclinaison...',
+      'info'
+    );
+
+    const barcode = await robustBarcodeDecode(sourceCanvas);
+
+    if (barcode) {
+
+      setSnValue(
+        barcode,
+        sourceType === 'CAMERA'
+          ? 'CAMERA_CODEBARRES_RENFORCE'
+          : 'PHOTO_CODEBARRES_RENFORCE'
+      );
+
+      showScanStatus(
+        '✅ SN lu par code-barres : ' + barcode,
+        'success'
+      );
+
+      if (sourceType === 'CAMERA') {
+        await stopCamera();
+      }
+
+      return;
+    }
+
+    showScanStatus(
+      '🧠 Code-barres non lu. Passage automatique en OCR...',
+      'info'
+    );
+
+    const ocr = await robustOcrDecode(sourceCanvas);
+
+    if (ocr && ocr.value) {
+
+      setSnValue(
+        ocr.value,
+        sourceType === 'CAMERA'
+          ? 'CAMERA_OCR'
+          : 'PHOTO_OCR'
+      );
+
+      const conf = Math.round(ocr.confidence || 0);
+
+      showScanStatus(
+        '✅ SN proposé par OCR : ' + ocr.value +
+        ' — confiance ' + conf + '% — À CONFIRMER AVANT ENREGISTREMENT.',
+        conf >= 65 ? 'success' : 'info'
+      );
+
+      if (sourceType === 'CAMERA') {
+        await stopCamera();
+      }
+
+      sn.focus();
+      sn.select();
+      return;
+    }
+
+    showScanStatus(
+      '❌ SN non lisible. Rapprochez la caméra, évitez les reflets et refaites une photo plus nette.',
+      'error'
+    );
+
+  } catch (error) {
+
+    console.error(error);
+
+    showScanStatus(
+      '❌ Analyse impossible : ' + (error.message || error),
+      'error'
+    );
+
+  } finally {
+
+    enhancedBusy = false;
+    enhancedReadButton.disabled = false;
+    photoButton.disabled = false;
+
+  }
+
+}
+
+function loadFileToCanvas(file) {
+
+  return new Promise(function(resolve, reject) {
+
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+
+    img.onload = function() {
+
+      try {
+
+        const c = document.createElement('canvas');
+        c.width = img.naturalWidth || img.width;
+        c.height = img.naturalHeight || img.height;
+        c.getContext('2d').drawImage(img, 0, 0);
+        URL.revokeObjectURL(url);
+        resolve(c);
+
+      } catch (e) {
+        URL.revokeObjectURL(url);
+        reject(e);
+      }
+
+    };
+
+    img.onerror = function() {
+      URL.revokeObjectURL(url);
+      reject(new Error('Impossible de lire la photo.'));
+    };
+
+    img.src = url;
+
+  });
+
+}
+
+async function applyBestCameraConstraints() {
+
+  try {
+
+    const video = getLiveVideo();
+    if (!video || !video.srcObject) return;
+
+    const track = video.srcObject.getVideoTracks()[0];
+    if (!track) return;
+
+    const caps = track.getCapabilities ? track.getCapabilities() : {};
+    const advanced = {};
+
+    if (caps.focusMode && caps.focusMode.includes('continuous')) {
+      advanced.focusMode = 'continuous';
+    }
+
+    if (caps.exposureMode && caps.exposureMode.includes('continuous')) {
+      advanced.exposureMode = 'continuous';
+    }
+
+    if (caps.whiteBalanceMode && caps.whiteBalanceMode.includes('continuous')) {
+      advanced.whiteBalanceMode = 'continuous';
+    }
+
+    if (caps.zoom && typeof caps.zoom.min === 'number') {
+      const target = Math.min(
+        caps.zoom.max || 1,
+        Math.max(caps.zoom.min || 1, 1.35)
+      );
+      advanced.zoom = target;
+    }
+
+    if (Object.keys(advanced).length) {
+      await track.applyConstraints({ advanced: [advanced] });
+    }
+
+    if (!(caps.torch === true)) {
+      torchButton.disabled = true;
+      torchButton.textContent = '🔦 FLASH NON DISPONIBLE';
+    } else {
+      torchButton.disabled = false;
+      torchButton.textContent = '🔦 FLASH';
+    }
+
+  } catch (e) {
+    console.log('Contraintes caméra:', e);
+  }
+
+}
+
+async function toggleTorch() {
+
+  try {
+
+    const video = getLiveVideo();
+    if (!video || !video.srcObject) return;
+
+    const track = video.srcObject.getVideoTracks()[0];
+    if (!track) return;
+
+    const caps = track.getCapabilities ? track.getCapabilities() : {};
+
+    if (!caps.torch) {
+      showScanStatus('ℹ️ Flash non supporté sur cet appareil.', 'info');
+      return;
+    }
+
+    torchOn = !torchOn;
+
+    await track.applyConstraints({
+      advanced: [{ torch: torchOn }]
+    });
+
+    torchButton.textContent = torchOn
+      ? '🔦 FLASH : ON'
+      : '🔦 FLASH';
+
+  } catch (e) {
+    console.log(e);
+    showScanStatus('⚠️ Impossible de commander le flash.', 'info');
+  }
+
+}
+
+
+/**********************************************************
  * CAMERA
  **********************************************************/
 
@@ -1232,77 +2228,57 @@ cameraButton.addEventListener(
       return;
     }
 
-    cameraBox.style.display =
-      'block';
-
-    cameraButton.disabled =
-      true;
-
+    cameraBox.style.display = 'block';
+    cameraButton.disabled = true;
+    hideQuality();
 
     try {
 
-      html5QrCode =
-        new Html5Qrcode(
-          'reader'
-        );
-
+      html5QrCode = new Html5Qrcode('reader');
 
       const config = {
 
-        fps: 10,
+        fps: 20,
 
-        qrbox: function(
-          viewfinderWidth,
-          viewfinderHeight
-        ) {
+        qrbox: function(viewfinderWidth, viewfinderHeight) {
 
-          const size =
-  Math.min(
-    viewfinderWidth * 0.95,
-    viewfinderHeight * 0.80
-  );
+          // Cadre large adapté aux codes-barres 1D longs.
+          const width = Math.floor(viewfinderWidth * 0.94);
+          const height = Math.floor(
+            Math.min(viewfinderHeight * 0.42, width * 0.42)
+          );
 
           return {
-            width: Math.floor(size),
-            height: Math.floor(size)
+            width: Math.max(180, width),
+            height: Math.max(110, height)
           };
 
         },
 
-        aspectRatio:
-          1.0,
+        aspectRatio: 1.7777778,
+        disableFlip: true,
 
         formatsToSupport: [
-
           Html5QrcodeSupportedFormats.QR_CODE,
-
           Html5QrcodeSupportedFormats.CODE_128,
-
           Html5QrcodeSupportedFormats.CODE_39,
-
           Html5QrcodeSupportedFormats.CODE_93,
-
           Html5QrcodeSupportedFormats.EAN_13,
-
           Html5QrcodeSupportedFormats.EAN_8,
-
           Html5QrcodeSupportedFormats.UPC_A,
-
           Html5QrcodeSupportedFormats.UPC_E,
-
           Html5QrcodeSupportedFormats.ITF,
-
-          Html5QrcodeSupportedFormats.CODABAR
-
+          Html5QrcodeSupportedFormats.CODABAR,
+          Html5QrcodeSupportedFormats.DATA_MATRIX,
+          Html5QrcodeSupportedFormats.PDF_417
         ]
 
       };
 
-
       await html5QrCode.start(
 
         {
-          facingMode: 'environment'
+          facingMode: { exact: 'environment' }
         },
 
         config,
@@ -1313,51 +2289,118 @@ cameraButton.addEventListener(
             return;
           }
 
+          const value = normalizeDecodedValue(decodedText);
 
-          sn.value =
-            decodedText.trim();
+          if (!looksLikeSerial(value)) {
+            return;
+          }
 
+          setSnValue(value, 'CAMERA_CODEBARRES');
 
           showScanStatus(
-            '✅ Code détecté : ' +
-            decodedText,
+            '✅ Code détecté : ' + value,
             'success'
           );
-
 
           stopCamera();
 
         },
 
         function(errorMessage) {
-
-          // Ignorer les erreurs normales
-          // pendant la recherche du code.
-
+          // Les erreurs de lecture image par image sont normales.
         }
 
       );
 
+      cameraRunning = true;
+      await applyBestCameraConstraints();
 
-      cameraRunning =
-        true;
+      showScanStatus(
+        '📷 Caméra prête. Le scan standard tourne en continu.',
+        'info'
+      );
 
+      // Tentative renforcée périodique sans OCR lourd.
+      autoEnhancedTimer = setInterval(async function() {
+
+        if (!cameraRunning || enhancedBusy) return;
+
+        try {
+          const frame = captureLiveFrame();
+          const result = await robustBarcodeDecode(frame);
+
+          if (result && cameraRunning) {
+            setSnValue(result, 'CAMERA_CODEBARRES_RENFORCE_AUTO');
+            showScanStatus('✅ SN détecté automatiquement : ' + result, 'success');
+            await stopCamera();
+          }
+        } catch (e) {
+          // Ignorer les échecs ponctuels.
+        }
+
+      }, 3200);
 
     } catch (error) {
 
       console.error(error);
 
-      cameraBox.style.display =
-        'none';
+      // Certains navigateurs refusent exact: environment.
+      try {
 
-      cameraButton.disabled =
-        false;
+        html5QrCode = new Html5Qrcode('reader');
 
-      showMessage(
-        '❌ Impossible d’ouvrir la caméra.\n' +
-        'Autorisez la caméra dans Chrome.',
-        'error'
-      );
+        await html5QrCode.start(
+          { facingMode: 'environment' },
+          {
+            fps: 18,
+            qrbox: function(w, h) {
+              return {
+                width: Math.floor(w * 0.94),
+                height: Math.max(110, Math.floor(h * 0.36))
+              };
+            },
+            aspectRatio: 1.7777778,
+            formatsToSupport: [
+              Html5QrcodeSupportedFormats.CODE_128,
+              Html5QrcodeSupportedFormats.CODE_39,
+              Html5QrcodeSupportedFormats.CODE_93,
+              Html5QrcodeSupportedFormats.EAN_13,
+              Html5QrcodeSupportedFormats.EAN_8,
+              Html5QrcodeSupportedFormats.UPC_A,
+              Html5QrcodeSupportedFormats.UPC_E,
+              Html5QrcodeSupportedFormats.ITF,
+              Html5QrcodeSupportedFormats.CODABAR,
+              Html5QrcodeSupportedFormats.QR_CODE
+            ]
+          },
+          function(decodedText) {
+            const value = normalizeDecodedValue(decodedText);
+            if (looksLikeSerial(value)) {
+              setSnValue(value, 'CAMERA_CODEBARRES');
+              showScanStatus('✅ Code détecté : ' + value, 'success');
+              stopCamera();
+            }
+          },
+          function() {}
+        );
+
+        cameraRunning = true;
+        await applyBestCameraConstraints();
+
+      } catch (fallbackError) {
+
+        console.error(fallbackError);
+
+        cameraBox.style.display = 'none';
+        cameraButton.disabled = false;
+
+        showMessage(
+          '❌ Impossible d’ouvrir la caméra.\n' +
+          'Autorisez la caméra dans Chrome.',
+          'error'
+        );
+
+      }
 
     }
 
@@ -1366,60 +2409,103 @@ cameraButton.addEventListener(
 
 
 /**********************************************************
+ * LECTURE RENFORCÉE DE LA FRAME CAMERA
+ **********************************************************/
+
+enhancedReadButton.addEventListener('click', async function() {
+
+  try {
+
+    const frame = captureLiveFrame();
+    await processCapturedImage(frame, 'CAMERA');
+
+  } catch (error) {
+
+    showScanStatus(
+      '⚠️ La caméra n’est pas encore prête. Attendez une seconde puis réessayez.',
+      'info'
+    );
+
+  }
+
+});
+
+
+torchButton.addEventListener('click', toggleTorch);
+
+
+/**********************************************************
+ * PHOTO EXISTANTE / APPAREIL PHOTO
+ **********************************************************/
+
+photoButton.addEventListener('click', function() {
+  photoInput.value = '';
+  photoInput.click();
+});
+
+photoInput.addEventListener('change', async function() {
+
+  const file = this.files && this.files[0];
+  if (!file) return;
+
+  try {
+
+    showScanStatus('🖼️ Chargement de la photo...', 'info');
+    const canvas = await loadFileToCanvas(file);
+    await processCapturedImage(canvas, 'PHOTO');
+
+  } catch (error) {
+
+    console.error(error);
+
+    showScanStatus(
+      '❌ Impossible d’analyser cette photo.',
+      'error'
+    );
+
+  }
+
+});
+
+
+/**********************************************************
  * ARRETER CAMERA
  **********************************************************/
 
 async function stopCamera() {
 
-  if (
-    !html5QrCode ||
-    !cameraRunning
-  ) {
+  if (autoEnhancedTimer) {
+    clearInterval(autoEnhancedTimer);
+    autoEnhancedTimer = null;
+  }
 
-    cameraBox.style.display =
-      'none';
+  torchOn = false;
+  torchButton.textContent = '🔦 FLASH';
 
-    cameraButton.disabled =
-      false;
+  if (!html5QrCode || !cameraRunning) {
 
+    cameraBox.style.display = 'none';
+    cameraButton.disabled = false;
     return;
 
   }
 
-
   try {
-
     await html5QrCode.stop();
-
   } catch (error) {
-
     console.log(error);
-
   }
-
 
   try {
-
     await html5QrCode.clear();
-
   } catch (error) {
-
     console.log(error);
-
   }
 
-
-  html5QrCode =
-    null;
-
-  cameraRunning =
-    false;
-
-  cameraBox.style.display =
-    'none';
-
-  cameraButton.disabled =
-    false;
+  html5QrCode = null;
+  cameraRunning = false;
+  cameraBox.style.display = 'none';
+  cameraButton.disabled = false;
 
 }
 
@@ -1431,9 +2517,7 @@ async function stopCamera() {
 closeCameraButton.addEventListener(
   'click',
   function() {
-
     stopCamera();
-
   }
 );
 
